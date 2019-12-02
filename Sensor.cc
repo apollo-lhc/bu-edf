@@ -1,4 +1,5 @@
-#include "myunp.h"
+#include <Sesnsors/net_helpers.hh>
+#include <Sensors/Sensor.hh>
 
 #include <string.h>
 #include <time.h>
@@ -8,39 +9,36 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 
-#define SA  struct sockaddr
 
-class Sensor {
+Sensor::Sensor(){
+  sockfd = -1;
+  bzero(&servaddr, sizeof(servaddr));
+}
 
-  int sockfd;
-    
-  struct sockaddr_in * servaddr;
-
-
-
-  public:
-  int connect(std::string IP_addr, int port_number) {
-    if (sockfd = socket(AF_INET, SOCK_STREAM, 0) < ) {
-      printf("sockfd < 0");
-    }
+int Sensor::connect(std::string const &IP_addr, int port_number) {
+  if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    return -1;
+  }
 
     bzero(&servaddr, sizeof(servaddr));
 
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(2003); /* 2003 is plaintext port */
 
-    if (inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, IP_addr.c_str(), &servaddr.sin_addr) <= 0) {
 	printf("inet_pton error for localhost");
+	return -1;
     }
 
-    if (connect(sockfd, (SA *) &servaddr, sizeof(servaddr)) < 0){
+    if (connect(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0){
       printf("connect error");
+      return -1;
     }
- 
+    return sockfd;
       
-  }
+}
     
-  int disconnect() {
+int Sensor::disconnect() {
     if (shutdown(sockfd, SHUT_RDWR) < 0){
       printf("shutdown failed");
       return -1;
@@ -48,13 +46,18 @@ class Sensor {
     sockfd = -1;
     return 0;
     
-  }
+}
   
-  int get_sockfd(){
+int Sensor::getSockfd(){
     return sockfd;
-  }
+}
+
+void SetDataBaseName(std::string const &name){
+  databaseName = name;
+}
   
-  int report(){
+int Sensor::report(){
+  /*CHECK IF databaseName.c_str() is empty (check std::string docs) ,return -1 if so*/
 
     /* get float value for our particular sensor */
     float value = get_val();
@@ -67,8 +70,8 @@ class Sensor {
     char *stringToWrite = new char[stringToWriteLen+1];
     memset(stringToWrite, 0, stringToWriteLen+1);
 
-    /* make into one string */
-    snprintf(stringToWrite, stringToWriteLen, "sensors.unix_time %f %d\n", value, time_now);
+    /* make into one string */ /* make this database string*/
+    snprintf(stringToWrite, stringToWriteLen, "%s %f %d\n", databaseName.c_str(), value, time_now);
 
     /* write the result */
     if (writen(sockfd, stringToWrite, strlen(stringToWrite) < 0) {
@@ -77,6 +80,4 @@ class Sensor {
     }
   }
 
-  virtual float get_val();
 
-}
