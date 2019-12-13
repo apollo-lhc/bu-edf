@@ -1,3 +1,6 @@
+#ifndef __SENSOR_HH__
+#define __SENSOR_HH__
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,6 +11,7 @@ class Sensor {
 
 public:
   Sensor();
+  virtual ~Sensor();
 
   int Connect(std::string const &IP_addr, int port_number);
 
@@ -19,7 +23,7 @@ public:
 
   int Report();
 
-  virtual float GetVal();
+  virtual float GetVal() =0;
 
 private:
   Sensor( const Sensor& other );// = 0;
@@ -41,3 +45,4 @@ private:
 
   std::string databaseName;
 };
+#endif

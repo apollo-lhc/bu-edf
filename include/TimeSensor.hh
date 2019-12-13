@@ -5,6 +5,6 @@ class TimeSensor : public Sensor {
 public:
   TimeSensor();
   
-  virtual float get_val();
+  float GetVal();
 
 };
