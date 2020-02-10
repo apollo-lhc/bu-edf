@@ -27,7 +27,7 @@ int Sensor::Connect(std::string const &IP_addr, int port_number) {
   bzero(&servaddr, sizeof(servaddr));
 
   servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons(2003); /* 2003 is plaintext port */
+  servaddr.sin_port = htons(port_number); /* 2003 is plaintext port */
 
   if (inet_pton(AF_INET, IP_addr.c_str(), &servaddr.sin_addr) <= 0) {
       printf("inet_pton error for localhost");
