@@ -1,23 +1,38 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
 #include <IpmiTemperatureSensor.hh>
+#include <stdexcept>
 
-IpmiTemperatureSensor::IpmiTemperatureSensor(int sensorNum, std::string dbName){
+IpmiTemperatureSensor::IpmiTemperatureSensor(int sensorNum, std::string dbName, char *hostname_, uint8_t deviceAddr){
   SetDatabaseName(dbName);
   SetSensorNumber(sensorNum);
+  SetHostname(hostname_);
+  SetDeviceAccessAddress(deviceAddr);
 }
 
 void IpmiTemperatureSensor::SetSensorNumber(int sensorNum) {
   sensorNumber = sensorNum;
 }
 
+void IpmiTemperatureSensor::SetHostname(char *hostname_){
+  hostname = hostname_;
+}
+
+void IpmiTemperatureSensor::SetDeviceAccessAddress(uint8_t deviceAddr){
+  deviceAccessAddress = deviceAddr;
+}
+
+
 float IpmiTemperatureSensor::GetVal(){
+
+  // we must make this code non-blocking!
   ipmi_ctx_t ipmiContext = ipmi_ctx_create();
-  const char *hostname = "192.168.10.171";
+
 
   int connection = ipmi_ctx_open_outofband(ipmiContext,
 					   hostname,
@@ -28,12 +43,14 @@ float IpmiTemperatureSensor::GetVal(){
 					   0,0,0,0);
 
   if ( connection < 0){
+    // THROW CONNECTION HERE!    std::
+    throw std::runtime_error("Runtime error, returning -1");
     return -1;
-} 
+  } 
 
   uint8_t channel_number = 0;
   // Device access address
-  uint8_t rs_addr = 0x20;
+  //  uint8_t rs_addr = 0x20;
 
   uint8_t lun = 0;
  // net_fn code for "Sensor Events" 0x04
@@ -49,14 +66,19 @@ float IpmiTemperatureSensor::GetVal(){
 
   const size_t buf_rs_size = 256;
   uint8_t buf_rs[buf_rs_size];
+
   int raw_result = ipmi_cmd_raw_ipmb ( ipmiContext,
 				       channel_number,
-				       rs_addr,
+				       deviceAccessAddress,
 				       lun,
 				       net_fn,
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
 
+  if(raw_result == -1 || raw_result == 0) {
+    printf("error! errnum = %d\n", ipmi_ctx_errnum(ipmiContext));
+  }
   // the 3rd byte of output is the useful one
+  ipmi_ctx_close(ipmiContext);
   return float(buf_rs[2]);
 }

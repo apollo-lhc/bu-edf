@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 
+#include <unistd.h>
 
 Sensor::Sensor(){
   sockfd = -1;
@@ -31,12 +32,14 @@ int Sensor::Connect(std::string const &IP_addr, int port_number) {
 
   if (inet_pton(AF_INET, IP_addr.c_str(), &servaddr.sin_addr) <= 0) {
       printf("inet_pton error for localhost");
+      close(sockfd);
       sockfd = -1;
       return -1;
   }
 
   if (connect(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0){
     printf("connect error");
+    close(sockfd);
     sockfd = -1;
     return -1;
   }
@@ -72,7 +75,7 @@ int Sensor::Report(){
     printf("database name is empty! Please update it before calling this function");
     return -1;
   }
-   
+
   /* get float value for our particular sensor */
   float value = GetVal();
 
@@ -86,10 +89,17 @@ int Sensor::Report(){
 
   /* make into one string */ /* make this database string*/
   snprintf(stringToWrite, stringToWriteLen, "%s %f %d\n", databaseName.c_str(), value, time_now);
-  
+
   /* write the result */
   if (writen(sockfd, stringToWrite, strlen(stringToWrite)) < 0) {
     printf("writen failed");
+    if (connect(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0){
+      printf("connect error");
+      close(sockfd);
+      sockfd = -1;
+      return -1;
+    }
+    writen(sockfd, stringToWrite, strlen(stringToWrite));
     delete [] stringToWrite;
     return -1;
   }

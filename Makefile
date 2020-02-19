@@ -8,6 +8,10 @@ SRC=src
 
 DEPS=include/%.hh
 
+BUILD=build
+
+LIB=lib
+
 OBJ= main.o net_helpers.o TimeSensor.o Sensor.o IpmiTemperatureSensor.o IpmiFanSpeedSensor.o
 
 .PHONEY: all clean
@@ -21,4 +25,4 @@ main: $(OBJ)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ) 

@@ -4,6 +4,8 @@
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
 #include <IpmiFanSpeedSensor.hh>
+#include <stdexcept>
+
 
 IpmiFanSpeedSensor::IpmiFanSpeedSensor(int sensorNum, std::string dbName){
   SetDatabaseName(dbName);
@@ -27,6 +29,7 @@ float IpmiFanSpeedSensor::GetVal(){
 					   0,0,0,0);
 
   if (connection < 0) {
+    throw std::runtime_error("Runtime error, returning -1");
     return -1;
   }
 
@@ -56,6 +59,9 @@ float IpmiFanSpeedSensor::GetVal(){
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size );
 
+  // close connection
+  ipmi_ctx_close(ipmiContext);
+  
   float raw_fan_speed = float(buf_rs[2]);
   float fan_speed_rpm = raw_fan_speed*46;
   int fan_speed_percent = raw_fan_speed/1.46;
