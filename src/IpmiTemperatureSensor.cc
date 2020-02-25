@@ -7,6 +7,8 @@
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
 #include <IpmiTemperatureSensor.hh>
 #include <stdexcept>
+#include <string.h>
+#include <IpmbSensorResult.hh>
 
 IpmiTemperatureSensor::IpmiTemperatureSensor(int sensorNum, std::string dbName, char *hostname_, uint8_t deviceAddr){
   SetDatabaseName(dbName);
@@ -44,7 +46,7 @@ float IpmiTemperatureSensor::GetVal(){
 
   if ( connection < 0){
     // THROW CONNECTION HERE!    std::
-    throw std::runtime_error("Runtime error, returning -1");
+    throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext)));
     return -1;
   } 
 
@@ -75,10 +77,25 @@ float IpmiTemperatureSensor::GetVal(){
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
 
+  
+  
   if(raw_result == -1 || raw_result == 0) {
-    printf("error! errnum = %d\n", ipmi_ctx_errnum(ipmiContext));
+    throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext)));
   }
-  // the 3rd byte of output is the useful one
+
   ipmi_ctx_close(ipmiContext);
-  return float(buf_rs[2]);
+
+  
+  IpmbSensorResult *ipmbSensorVal = (IpmbSensorResult *) buf_rs;
+    
+  if( ipmbSensorVal->status == 0x20 ) {
+    throw std::runtime_error("Event messages are disabled from this sensor\n");
+  }
+  
+  if ( ipmbSensorVal->sensorValue < 0 ){
+    throw std::range_error("Invalid sensor value\n");
+  }
+
+  // the 3rd byte of output is the useful one
+  return float(ipmbSensorVal->sensorValue);
 }

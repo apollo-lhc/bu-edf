@@ -21,7 +21,7 @@ public:
 
   void SetDatabaseName(std::string const &name);
 
-  int Report();
+  virtual int Report();
 
   virtual float GetVal() =0;
 
