@@ -76,7 +76,22 @@ float IpmiFanSpeedSensor::GetVal(){
 
   IpmbSensorResult *ipmbSensorVal = (IpmbSensorResult *) buf_rs;
 
-  if ( ipmbSensorVal->status == 0x20 ) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  if ( ipmbSensorVal->status != 192) {
     throw std::runtime_error("Event messages are disabled from this fanspeed sensor\n");
   }
 
@@ -85,7 +100,7 @@ float IpmiFanSpeedSensor::GetVal(){
   }
 
   
-  float raw_fan_speed = ipmbSensorVal->sensorValue;
+  float raw_fan_speed = float(ipmbSensorVal->sensorValue);
   float fan_speed_rpm = raw_fan_speed*46;
   int fan_speed_percent = raw_fan_speed/1.46;
   return fan_speed_percent;

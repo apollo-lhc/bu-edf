@@ -108,5 +108,3 @@ int Sensor::Report(){
 
   return 0;
 }
-
-

@@ -4,6 +4,7 @@
 #include <TimeSensor.hh>
 #include <IpmiTemperatureSensor.hh>
 #include <IpmiFanSpeedSensor.hh>
+#include <ApolloBlade.hh>
 #include <unistd.h>
 #include <string>
 #include <fstream>
@@ -21,9 +22,6 @@ int main(){
   std::string const &IP_addr = "127.0.0.1";
   int port_number = 2003; // plaintext data port
 
-  //  char *shelf_hostname = "192.168.10.171";
-  //  uint8_t rs_addr = 0x20;
-
   // create map that we'll put sensors in
   std::vector<Sensor*> sensors;
 
@@ -31,7 +29,8 @@ int main(){
     po::options_description fileOptions{"File"};
 
     fileOptions.add_options()
-      ("sensor", po::value<std::string>(), "value");
+      ("sensor", po::value<std::string>(), "value")
+      ("apollo", po::value<std::string>(), "value");
 
     std::string configFileName = "sensors.config";
     std::ifstream ifs{configFileName};
@@ -47,7 +46,7 @@ int main(){
 
       for ( int i = 0; i < num_options; i++ ) {
 	std::string option = config_options.options[i].string_key;
-
+	
 	if(option == "sensor"){
 	  // vector that we'll split the string into
 	  std::vector<std::string> sensor_info;
@@ -72,10 +71,10 @@ int main(){
       	  try {
 	    // make sensor objects. We currently can only make Ipmi Temp or Fanspeed sensors
 	    if (sensor_type == "IpmiTemperature") {
-
 	      Sensor *tempSensor = new IpmiTemperatureSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(tempSensor);
 	      sensors[i]->Connect(IP_addr, port_number);
+	      // made esnsor of type ./..
 	    } else if (sensor_type == "IpmiFanspeed") {
 	      Sensor *fanspeedSensor = new IpmiFanSpeedSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(fanspeedSensor);
@@ -86,6 +85,16 @@ int main(){
 	  } catch (std::runtime_error &e){
 	    std::cout << e.what() << std::endl;
 	  }
+	} else if(option == "apollo") {
+	  
+	  char *shelf_hostname = "192.168.10.171";
+	  uint8_t rs_addr = 0x88;
+
+	  std::string apollo = config_options.options[i].value[0].c_str();
+	  // get rid of these hard codes
+	  Sensor *apolloBlade = new ApolloBlade(7, "Apollo7", shelf_hostname, rs_addr);
+	  sensors.push_back(apolloBlade);
+	  sensors[i]->Connect(IP_addr, port_number);
 	}
       }
     }
@@ -99,13 +108,15 @@ int main(){
     // sleep and repeat this process
     while(1){
       for ( int i = 0; i < sensors.size(); i++ ) {
+	// atemps++
 	sensors[i]->Report();
+	// completed++
       }
 
       //	printf("temperature and fanspeed reported, it has been %d seconds\n", seconds);
       seconds += secondsToSleep;
       sleep(secondsToSleep);
-
+      
     }
   
 

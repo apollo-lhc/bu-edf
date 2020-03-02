@@ -13,7 +13,7 @@ public:
   Sensor();
   virtual ~Sensor();
 
-  int Connect(std::string const &IP_addr, int port_number);
+  virtual int Connect(std::string const &IP_addr, int port_number);
 
   int Disconnect();
 

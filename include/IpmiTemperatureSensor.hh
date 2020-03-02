@@ -11,6 +11,10 @@ public:
 
   void SetDeviceAccessAddress(uint8_t deviceAddr);
 
+  //  virtual int Connect(std::string const &IP_addr, int port_number);
+
+  //virtual int Report();
+  
   virtual float GetVal();
 
 private:

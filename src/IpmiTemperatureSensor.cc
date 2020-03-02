@@ -87,8 +87,10 @@ float IpmiTemperatureSensor::GetVal(){
 
   
   IpmbSensorResult *ipmbSensorVal = (IpmbSensorResult *) buf_rs;
-    
-  if( ipmbSensorVal->status == 0x20 ) {
+  
+  
+  
+  if( ipmbSensorVal->status != 0xc0 ) {
     throw std::runtime_error("Event messages are disabled from this sensor\n");
   }
   

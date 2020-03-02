@@ -12,7 +12,7 @@ BUILD=build
 
 LIB=lib
 
-OBJ= main.o net_helpers.o TimeSensor.o Sensor.o IpmiTemperatureSensor.o IpmiFanSpeedSensor.o
+OBJ= main.o net_helpers.o TimeSensor.o Sensor.o IpmiTemperatureSensor.o IpmiFanSpeedSensor.o ApolloBlade.o
 
 .PHONEY: all clean
 
