@@ -85,14 +85,23 @@ int main(){
 	  } catch (std::runtime_error &e){
 	    std::cout << e.what() << std::endl;
 	  }
-	} else if(option == "apollo") {
-	  
-	  char *shelf_hostname = "192.168.10.171";
-	  uint8_t rs_addr = 0x88;
+	}
 
+
+	else if(option == "apollo") {
+          // vector that we'll split the string into                                                                               
+	  std::vector<std::string> apollo_info;
 	  std::string apollo = config_options.options[i].value[0].c_str();
-	  // get rid of these hard codes
-	  Sensor *apolloBlade = new ApolloBlade(7, "Apollo7", shelf_hostname, rs_addr);
+	  apollo_info = split_sensor_string(apollo, delimiter);
+	  
+
+	  std::string base_string = "Sensors." + apollo_info[0] + ".";
+	  int ipmi_sensor_number = std::stoi(apollo_info[1]);
+	  char *shelf_hostname = (char *) apollo_info[3].c_str();
+	  unsigned long rs_addr = strtoul((char *) apollo_info[4].c_str(), NULL, 0);
+
+
+	  Sensor *apolloBlade = new ApolloBlade(ipmi_sensor_number, base_string, shelf_hostname, rs_addr);
 	  sensors.push_back(apolloBlade);
 	  sensors[i]->Connect(IP_addr, port_number);
 	}
@@ -104,24 +113,33 @@ int main(){
 
   
     unsigned int secondsToSleep = 30;
-    int seconds = 0;
+
+    
+    int attempts = 0;
+    int successful = 0;
+    int attempts_timer = 0;
     // sleep and repeat this process
     while(1){
       for ( int i = 0; i < sensors.size(); i++ ) {
-	// atemps++
+	attempts++;
 	sensors[i]->Report();
-	// completed++
+	successful++;
       }
 
-      //	printf("temperature and fanspeed reported, it has been %d seconds\n", seconds);
-      seconds += secondsToSleep;
+      
+      attempts_timer += secondsToSleep;
+      if ( attempts_timer >= 600){
+	printf("%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
+	attempts = 0;
+	successful = 0;
+	attempts_timer = 0;
+      }
+
+      
       sleep(secondsToSleep);
       
     }
   
-
-  
-
   /*if (NULL != ipmi_temperature_sensor_1){
     delete ipmi_temperature_sensor_1;
     }*/
