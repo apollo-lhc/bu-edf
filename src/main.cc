@@ -17,7 +17,7 @@ namespace po = boost::program_options;
 
 std::vector<std::string> split_sensor_string(std::string sensor, std::string delimiter);
 
-int main(){
+int main(int argc, char ** argv){
 
   std::string const &IP_addr = "127.0.0.1";
   int port_number = 2003; // plaintext data port
@@ -33,6 +33,9 @@ int main(){
       ("apollo", po::value<std::string>(), "value");
 
     std::string configFileName = "sensors.config";
+    if(argc > 1){
+      configFileName=argv[1];
+    }
     std::ifstream ifs{configFileName};
 
 
@@ -69,16 +72,26 @@ int main(){
 	  unsigned long rs_addr =  strtoul((char *) sensor_info[4].c_str(), NULL, 0); 
 	  //      	  uint8_t rs_addr = (uint8_t) rs_addr_int;
       	  try {
+	    printf("Adding Sensor %s:%s Sensor %s(%d) from %s,0x%02X to %s\n",
+		   sensor_type.c_str(),
+		   fan_tray_number.c_str(),
+		   sensor_info[2].c_str(),ipmi_sensor_number,
+		   shelf_hostname,
+		   rs_addr,
+		   wsp_filename.c_str()
+		   );
 	    // make sensor objects. We currently can only make Ipmi Temp or Fanspeed sensors
 	    if (sensor_type == "IpmiTemperature") {
 	      Sensor *tempSensor = new IpmiTemperatureSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(tempSensor);
-	      sensors[i]->Connect(IP_addr, port_number);
+	      //	      sensors[i]->Connect(IP_addr, port_number);
+	      tempSensor->Connect(IP_addr, port_number);
 	      // made esnsor of type ./..
 	    } else if (sensor_type == "IpmiFanspeed") {
 	      Sensor *fanspeedSensor = new IpmiFanSpeedSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(fanspeedSensor);
-	      sensors[i]->Connect(IP_addr, port_number);
+	      //	      sensors[i]->Connect(IP_addr, port_number);
+	      fanspeedSensor->Connect(IP_addr, port_number);
 	    } else {
 	      printf("invalid sensor type: %s\n", sensor_type.c_str());
 	    }
@@ -100,10 +113,16 @@ int main(){
 	  char *shelf_hostname = (char *) apollo_info[3].c_str();
 	  unsigned long rs_addr = strtoul((char *) apollo_info[4].c_str(), NULL, 0);
 
+	  printf("Adding Apollo %d %s: %d\n",
+		 ipmi_sensor_number,
+		 shelf_hostname,
+		 rs_addr
+		 );
 
 	  Sensor *apolloBlade = new ApolloBlade(ipmi_sensor_number, base_string, shelf_hostname, rs_addr);
 	  sensors.push_back(apolloBlade);
-	  sensors[i]->Connect(IP_addr, port_number);
+	  //	  sensors[i]->Connect(IP_addr, port_number);
+	  apolloBlade->Connect(IP_addr, port_number);
 	}
       }
     }
@@ -122,8 +141,12 @@ int main(){
     while(1){
       for ( int i = 0; i < sensors.size(); i++ ) {
 	attempts++;
-	sensors[i]->Report();
-	successful++;
+	try{
+	  sensors[i]->Report();
+	  successful++;
+	}catch(const std::exception & e){
+	}
+	
       }
 
       
