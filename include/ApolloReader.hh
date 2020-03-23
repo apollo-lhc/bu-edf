@@ -1,11 +1,14 @@
 #ifndef __APOLLO__READER__HH__
 #define __APOLLO__READER__HH__
 
+#include <string>
+#include <vector>
+
 class ApolloReader {
 
 public:
 
-  ApolloReader();
+  ApolloReader(char *hostname_, uint8_t deviceAddr);
   
   std::vector<uint8_t> GetHeader();
   
@@ -16,6 +19,10 @@ public:
 private:
 
   void Read();
+
+  char *hostname;
+  
+  uint8_t deviceAccessAddress;
   
   std::vector<uint8_t> header;
   
