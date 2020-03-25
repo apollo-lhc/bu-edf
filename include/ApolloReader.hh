@@ -15,16 +15,18 @@ public:
 
   std::vector<uint8_t> GetData();
 
+  
+  std::string GetBoardManufacturer();
+  std::string GetBoardName();
+
+
   int GetProductSerial();
 
-  std::string GetProductName();
-
-  void Read();
   
 private:
 
+  void Read();
   void ReadHeader();
-
   void ReadInternalUse();
   void ReadChassisInfo();
   void ReadBoardArea();
@@ -61,5 +63,8 @@ private:
   std::vector<uint8_t> productInfoData;
   std::vector<uint8_t> multiRecordData;
 
+  // fields we ultimately are looking for
+  std::string boardManufacturer;
+  std::string boardName;
 };
 #endif

@@ -6,22 +6,18 @@
 #include <stdexcept>
 #include <string.h>
 
+
 ApolloReader::ApolloReader(char *hostname_, uint8_t deviceAddr){
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
+  Read();
 }
-
-/*ApolloReader::~ApolloReader(){
-  
-}
-*/
 
 
 void ApolloReader::Read(){
 
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
-  char *hostname = "192.168.10.171";
 
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
 					   hostname,
@@ -161,20 +157,12 @@ int ApolloReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
   uint8_t length_ms_byte = buf_rs[3];
 
   informationLength = 256*length_ms_byte + length_ls_byte;
-  printf("information length: %d\n", informationLength);
-  
-  for(int i = 0; i < 5; i++){
-    printf("LENGTH: %d ", buf_rs[i]);
-  }
-  printf("\n");
+
 }
 
 
 void ApolloReader::ReadHeader(){
   // read the first 8 bytes of data, figure out offsets, how many bytes are used
-  for(int i = 0; i < header.size(); i++){
-    printf("header[%d] = %d\n", i, header[i]);
-  }
   headerFormatVersion = header[0];
   internalUseStartingOffset = header[1]*8;
   chassisInfoStartingOffset = header[2]*8;
@@ -184,7 +172,6 @@ void ApolloReader::ReadHeader(){
   pad = header[6];
   commonHeaderChecksum = header[7];
   total_bytes_used = informationLength - commonHeaderChecksum;
-  printf("bytes used: %d\n", total_bytes_used);
 }
 
 
@@ -203,6 +190,14 @@ void ApolloReader::ReadInternalUse(){
 }     
 
 
+
+
+
+
+
+
+
+
 void ApolloReader::ReadChassisInfo(){
   printf("chassisInfoStartingOffset %d\n", chassisInfoStartingOffset);
   int lenChassis = data[chassisInfoStartingOffset+1]*8;
@@ -219,7 +214,20 @@ void ApolloReader::ReadChassisInfo(){
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
 void ApolloReader::ReadBoardArea(){
+  printf("board info:");
   int lenBoardArea = data[boardStartingOffset+1]*8;  
   std::vector<uint8_t>::const_iterator first = data.begin() + boardStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + boardStartingOffset + lenBoardArea;
@@ -231,25 +239,78 @@ void ApolloReader::ReadBoardArea(){
     printf("%02x ", boardData[i]);
   }
   printf("\n");
+
+
+  // BOARD MANUFACTURER
+  uint8_t board_manufacturer_type_and_length = boardData[6];
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(board_manufacturer_type_and_length == 0xc1){
+    printf("BOARD MANUFACTURER IS END OF FIELDS\n");
+  }
+  uint8_t board_manufacturer_length = ((board_manufacturer_type_and_length) & 0x3f);
+  uint8_t board_manufacturer_type = ((board_manufacturer_type_and_length) & 0xc0);
+  boardManufacturer = "";
+  for(int i = 0; i < board_manufacturer_length; i++){
+    boardManufacturer += boardData[6+i+1];
+  }
+  // END BOARD MANUFACTURER
+
+
+  // BOARD PRODUCT NAME
+  uint8_t board_name_type_and_length = boardData[6+1+board_manufacturer_length];
+  if(board_name_type_and_length == 0xc1){
+    printf("BOARD PRODUCT NAME IS END OF FIELDS\n");
+  }
+  uint8_t board_name_length = ((board_name_type_and_length) & 0x3f);
+  uint8_t board_name_type = ((board_name_type_and_length) & 0xc0);
+  boardName = "";
+  for(int i = 0; i < board_name_length; i++){
+    boardName += boardData[6+1+board_manufacturer_length+i+1];
+  }
 }
 
+std::string ApolloReader::GetBoardManufacturer(){
+  return boardManufacturer;
+}
+std::string ApolloReader::GetBoardName(){
+  return boardName;
+}
+
+
+
+
+
+
+
+
 void ApolloReader::ReadProductInfo(){
-  printf("productInfoStartingOffset %d\n", productInfoStartingOffset);
+  //  printf("product info:");
   int lenProductInfo = data[productInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + productInfoStartingOffset + lenProductInfo;
   productInfoData =  std::vector<uint8_t>(first, last);
-  for (int i = 0; i < productInfoData.size(); i++){
+  /*  for (int i = 0; i < productInfoData.size(); i++){
     if(i % 8 == 0){
       printf("\n");
     }
     printf("%02x ", productInfoData[i]);
   }
-  printf("\n");
+  printf("\n");*/
 }
 
+
+
+
+
+
+
+
+
+
+
+
 void ApolloReader::ReadMultiRecord(){
-  printf("multiRecordStartingOffset %d\n", multiRecordStartingOffset);
+
 }
 
 
