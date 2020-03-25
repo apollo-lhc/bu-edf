@@ -12,7 +12,9 @@ public:
   ApolloReader(char *hostname_, uint8_t deviceAddr);
   
   std::vector<uint8_t> GetHeader();
-  
+
+  std::vector<uint8_t> GetData();
+
   int GetProductSerial();
 
   std::string GetProductName();
@@ -21,11 +23,19 @@ public:
   
 private:
 
-  void ReadHeader(ipmi_ctx_t ipmiContext);
+  void ReadHeader();
+
+  void ReadInternalUse();
+  void ReadChassisInfo();
+  void ReadBoardArea();
+  void ReadProductInfo();
+  void ReadMultiRecord();
+
   
   int ReadInformationLength(ipmi_ctx_t ipmiContext);
 
   int informationLength;
+  int total_bytes_used;
   
   char *hostname;
   
@@ -41,9 +51,15 @@ private:
   uint8_t multiRecordStartingOffset;
   uint8_t pad;
   uint8_t commonHeaderChecksum;
-  
-  
+
+  // raw hex data from the blade
   std::vector<uint8_t> data;
+  // sub vectors for each info region
+  std::vector<uint8_t> internalUseData;
+  std::vector<uint8_t> chassisData;
+  std::vector<uint8_t> boardData;
+  std::vector<uint8_t> productInfoData;
+  std::vector<uint8_t> multiRecordData;
 
 };
 #endif
