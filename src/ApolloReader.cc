@@ -227,46 +227,79 @@ void ApolloReader::ReadChassisInfo(){
 
 
 void ApolloReader::ReadBoardArea(){
-  printf("board info:");
+  //  printf("board info:");
   int lenBoardArea = data[boardStartingOffset+1]*8;  
   std::vector<uint8_t>::const_iterator first = data.begin() + boardStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + boardStartingOffset + lenBoardArea;
   boardData =  std::vector<uint8_t>(first, last);
-  for (int i = 0; i < boardData.size(); i++){
+  /*  for (int i = 0; i < boardData.size(); i++){
     if(i % 8 == 0){
       printf("\n");
     }
     printf("%02x ", boardData[i]);
-  }
+    }
   printf("\n");
-
-
+  */
+  uint8_t fields_index = 6;
   // BOARD MANUFACTURER
-  uint8_t board_manufacturer_type_and_length = boardData[6];
+  uint8_t board_manufacturer_type_and_length = boardData[fields_index];
+  uint8_t board_man_index = fields_index+1;
+  fields_index += ((board_manufacturer_type_and_length) & 0x3f)+1;
   // only lower 6 bits are is length of field,  upper 2 bits are 'type'
   if(board_manufacturer_type_and_length == 0xc1){
     printf("BOARD MANUFACTURER IS END OF FIELDS\n");
   }
-  uint8_t board_manufacturer_length = ((board_manufacturer_type_and_length) & 0x3f);
-  uint8_t board_manufacturer_type = ((board_manufacturer_type_and_length) & 0xc0);
-  boardManufacturer = "";
-  for(int i = 0; i < board_manufacturer_length; i++){
-    boardManufacturer += boardData[6+i+1];
-  }
+  boardManufacturer = ReadBoardField(board_manufacturer_type_and_length, board_man_index);
   // END BOARD MANUFACTURER
 
-
   // BOARD PRODUCT NAME
-  uint8_t board_name_type_and_length = boardData[6+1+board_manufacturer_length];
+  uint8_t board_name_type_and_length = boardData[fields_index];
+  uint8_t board_name_index = fields_index+1;
+  fields_index += ((board_name_type_and_length) & 0x3f)+1;
   if(board_name_type_and_length == 0xc1){
     printf("BOARD PRODUCT NAME IS END OF FIELDS\n");
   }
-  uint8_t board_name_length = ((board_name_type_and_length) & 0x3f);
-  uint8_t board_name_type = ((board_name_type_and_length) & 0xc0);
-  boardName = "";
-  for(int i = 0; i < board_name_length; i++){
-    boardName += boardData[6+1+board_manufacturer_length+i+1];
+  boardName = ReadBoardField(board_name_type_and_length, board_name_index);
+  // END BOARD NAME
+  
+  // BOARD SERIAL NUMBER
+  uint8_t board_serial_type_and_length = boardData[fields_index];
+  uint8_t board_serial_index = fields_index+1;
+  fields_index += ((board_serial_type_and_length) & 0x3f)+1;
+  if(board_serial_type_and_length == 0xc1){
+    printf("BOARD SERIAL IS END OF FIELDS\n");
   }
+  boardSerial = ReadBoardField(board_serial_type_and_length, board_serial_index);
+  // END SERIAL NUMBER
+
+  // BOARD PART NUMBER
+  uint8_t board_part_type_and_length = boardData[fields_index];
+  uint8_t board_part_index = fields_index+1;
+  fields_index += ((board_part_type_and_length) & 0x3f)+1;
+  if(board_part_type_and_length == 0xc1){
+    printf("BOARD PART NUMBER IS END OF FIELDS\n");
+  }
+  boardPartNumber = ReadBoardField(board_part_type_and_length, board_part_index);
+  // END PART NUMBER
+
+  // FRU FILE ID
+  uint8_t fru_file_id_type_and_length = boardData[fields_index];
+  uint8_t fru_file_id_index = fields_index+1;
+  fields_index += ((fru_file_id_type_and_length) & 0x3f)+1;
+  if(fru_file_id_type_and_length == 0xc1){
+    printf("BOARD PART NUMBER IS END OF FIELDS\n");
+  }
+  fruFileId = ReadBoardField(fru_file_id_type_and_length, fru_file_id_index);
+  // END FRU FILE ID  
+}
+std::string ApolloReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
+  uint8_t field_length = ((field_type_and_length) & 0x3f);
+  uint8_t field_type = ((field_type_and_length) & 0xc0);
+  std::string field = "";
+  for(int i = 0; i < field_length; i++){
+    field += boardData[field_index+i];
+  }
+  return field;
 }
 
 std::string ApolloReader::GetBoardManufacturer(){
@@ -275,7 +308,15 @@ std::string ApolloReader::GetBoardManufacturer(){
 std::string ApolloReader::GetBoardName(){
   return boardName;
 }
-
+std::string ApolloReader::GetBoardSerial(){
+  return boardSerial;
+}
+std::string ApolloReader::GetBoardPartNumber(){
+  return boardPartNumber;
+}
+std::string ApolloReader::GetFruFileId(){
+  return fruFileId;
+}
 
 
 
@@ -284,21 +325,115 @@ std::string ApolloReader::GetBoardName(){
 
 
 void ApolloReader::ReadProductInfo(){
-  //  printf("product info:");
+  printf("product info:");
   int lenProductInfo = data[productInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + productInfoStartingOffset + lenProductInfo;
   productInfoData =  std::vector<uint8_t>(first, last);
-  /*  for (int i = 0; i < productInfoData.size(); i++){
+  for (int i = 0; i < productInfoData.size(); i++){
     if(i % 8 == 0){
       printf("\n");
     }
     printf("%02x ", productInfoData[i]);
   }
-  printf("\n");*/
+  printf("\n");
+
+  uint8_t fields_index = 3;
+  // PRODUCT MANUFACTURER
+  uint8_t product_manufacturer_type_and_length = productInfoData[fields_index];
+  uint8_t product_man_index = fields_index+1;
+  fields_index += ((product_manufacturer_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(product_manufacturer_type_and_length == 0xc1){
+    printf("PRODUCT MANUFACTURER IS END OF FIELDS\n");
+  }
+  productManufacturer = ReadProductField(product_manufacturer_type_and_length, product_man_index);
+  // END PRODUCT MANUFACTURER
+
+  // PRODUCT NAME
+  uint8_t product_name_type_and_length = productInfoData[fields_index];
+  uint8_t product_name_index = fields_index+1;
+  printf("product name index = %d\n",product_name_index);
+  fields_index += ((product_name_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(product_name_type_and_length == 0xc1){
+    printf("PRODUCT NAME IS END OF FIELDS\n");
+  }
+  productName = ReadProductField(product_name_type_and_length, product_name_index);
+  // END PRODUCT NAME
+
+  // PRODUCT PART NUMBER
+  uint8_t product_num_type_and_length = productInfoData[fields_index];
+  uint8_t product_num_index = fields_index+1;
+  fields_index += ((product_num_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(product_num_type_and_length == 0xc1){
+    printf("PRODUCT PART # IS END OF FIELDS\n");
+  }
+  productPartNumber = ReadProductField(product_num_type_and_length, product_num_index);
+  // END PRODUCT PART NUMBER
+
+  // PRODUCT VERSION
+  uint8_t product_version_type_and_length = productInfoData[fields_index];
+  uint8_t product_version_index = fields_index+1;
+  fields_index += ((product_version_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(product_version_type_and_length == 0xc1){
+    printf("PRODUCT VERSION IS END OF FIELDS\n");
+  }
+  productVersion = ReadProductField(product_version_type_and_length, product_version_index);
+  // END PRODUCT VERSION
+
+  // PRODUCT SERIAL
+  uint8_t product_serial_type_and_length = productInfoData[fields_index];
+  uint8_t product_serial_index = fields_index+1;
+  fields_index += ((product_serial_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(product_serial_type_and_length == 0xc1){
+    printf("PRODUCT SERIAL IS END OF FIELDS\n");
+  }
+  productSerial = ReadProductField(product_serial_type_and_length, product_serial_index);
+  // END PRODUCT SERIAL
+
+  // ASSSET TAG
+  uint8_t asset_tag_type_and_length = productInfoData[fields_index];
+  uint8_t asset_tag_name_index = fields_index+1;
+  fields_index += ((asset_tag_type_and_length) & 0x3f)+1;
+  // only lower 6 bits are is length of field,  upper 2 bits are 'type'
+  if(asset_tag_type_and_length == 0xc1){
+    printf("ASSET TAG IS END OF FIELDS\n");
+  }
+  assetTag = ReadProductField(asset_tag_type_and_length, asset_tag_name_index);
+  // END ASSET TAG
+
 }
-
-
+std::string ApolloReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
+  uint8_t field_length = ((field_type_and_length) & 0x3f);
+  uint8_t field_type = ((field_type_and_length) & 0xc0);
+  std::string field = "";
+  for(int i = 0; i < field_length; i++){
+    field += productInfoData[field_index+i];
+  }
+  return field;
+}
+std::string ApolloReader::GetProductManufacturer(){
+  return productManufacturer;
+}
+std::string ApolloReader::GetProductName(){
+  return productName;
+}
+std::string ApolloReader::GetProductPartNumber(){
+  return productPartNumber;
+}
+std::string ApolloReader::GetProductVersion(){
+  return productVersion;
+}
+std::string ApolloReader::GetProductSerial(){
+  return productSerial;
+}
+std::string ApolloReader::GetAssetTag(){
+  return assetTag;
+}
 
 
 

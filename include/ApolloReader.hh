@@ -15,13 +15,19 @@ public:
 
   std::vector<uint8_t> GetData();
 
-  
+  // board fields
   std::string GetBoardManufacturer();
   std::string GetBoardName();
-
-
-  int GetProductSerial();
-
+  std::string GetBoardSerial();
+  std::string GetBoardPartNumber();
+  std::string GetFruFileId();
+  // product info fields
+  std::string GetProductManufacturer();
+  std::string GetProductName();
+  std::string GetProductPartNumber();
+  std::string GetProductVersion();
+  std::string GetProductSerial();
+  std::string GetAssetTag();
   
 private:
 
@@ -30,7 +36,9 @@ private:
   void ReadInternalUse();
   void ReadChassisInfo();
   void ReadBoardArea();
+  std::string ReadBoardField(uint8_t field_type_and_length, uint8_t field_index);
   void ReadProductInfo();
+  std::string ReadProductField(uint8_t field_type_and_length, uint8_t field_index);
   void ReadMultiRecord();
 
   
@@ -63,8 +71,18 @@ private:
   std::vector<uint8_t> productInfoData;
   std::vector<uint8_t> multiRecordData;
 
-  // fields we ultimately are looking for
+  // board fields
   std::string boardManufacturer;
   std::string boardName;
+  std::string boardSerial;
+  std::string boardPartNumber;
+  std::string fruFileId;
+  // product fields
+  std::string productManufacturer;
+  std::string productName;
+  std::string productPartNumber;
+  std::string productVersion;
+  std::string productSerial;
+  std::string assetTag;
 };
 #endif
