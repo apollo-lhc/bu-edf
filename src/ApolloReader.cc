@@ -153,6 +153,9 @@ int ApolloReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 				     (void const *) buf_rq, buf_rq_size,
 			             buf_rs, buf_rs_size);
 
+  if (raw_result < 0){
+    printf("nothing found for length\n");
+  }
   uint8_t length_ls_byte = buf_rs[2];
   uint8_t length_ms_byte = buf_rs[3];
 
