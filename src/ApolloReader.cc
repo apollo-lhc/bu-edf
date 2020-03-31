@@ -5,9 +5,10 @@
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
 #include <stdexcept>
 #include <string.h>
-
+#include <string>
 
 ApolloReader::ApolloReader(char *hostname_, uint8_t deviceAddr){
+
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
   Read();
@@ -58,7 +59,7 @@ void ApolloReader::Read(){
   uint8_t buf_rs[buf_rs_size];
 
   /* use this command to get header information */
-  int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
+  int raw_result_header = ipmi_cmd_raw_ipmb(ipmiContext_,
                                      channel_number,
                                      deviceAccessAddress,
                                      lun,
@@ -68,13 +69,14 @@ void ApolloReader::Read(){
 
   for(int i = 3; i < 3+num_bytes_to_read;i++){
     header.push_back(buf_rs[i]);
-  } 
+  }
+
   ReadHeader();
 
-  
+
   int bytes_read = 0;
   while (bytes_read < total_bytes_used){    
-    
+
     int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
 				       channel_number,
 				       deviceAccessAddress,
@@ -82,8 +84,8 @@ void ApolloReader::Read(){
 				       net_fn,
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
+    //    printf("raw result = %d\n", raw_result);
 
-    
     /* bytes 3 through 3+num_bytes_to_read are the useful information in buf_rs*/
     for(int i = 3; i < 3+num_bytes_to_read; i++){
       data.push_back(buf_rs[i]);
@@ -175,6 +177,9 @@ void ApolloReader::ReadHeader(){
   pad = header[6];
   commonHeaderChecksum = header[7];
   total_bytes_used = informationLength - commonHeaderChecksum;
+  if(total_bytes_used < 0){
+    total_bytes_used *= -1;
+  }
 }
 
 
@@ -196,11 +201,6 @@ void ApolloReader::ReadInternalUse(){
 
 
 
-
-
-
-
-
 void ApolloReader::ReadChassisInfo(){
   printf("chassisInfoStartingOffset %d\n", chassisInfoStartingOffset);
   int lenChassis = data[chassisInfoStartingOffset+1]*8;
@@ -216,15 +216,6 @@ void ApolloReader::ReadChassisInfo(){
   printf("\n");
 
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -328,18 +319,18 @@ std::string ApolloReader::GetFruFileId(){
 
 
 void ApolloReader::ReadProductInfo(){
-  printf("product info:");
+  //  printf("product info:");
   int lenProductInfo = data[productInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + productInfoStartingOffset + lenProductInfo;
   productInfoData =  std::vector<uint8_t>(first, last);
-  for (int i = 0; i < productInfoData.size(); i++){
+  /*for (int i = 0; i < productInfoData.size(); i++){
     if(i % 8 == 0){
       printf("\n");
     }
     printf("%02x ", productInfoData[i]);
   }
-  printf("\n");
+  printf("\n");*/
 
   uint8_t fields_index = 3;
   // PRODUCT MANUFACTURER
@@ -356,7 +347,6 @@ void ApolloReader::ReadProductInfo(){
   // PRODUCT NAME
   uint8_t product_name_type_and_length = productInfoData[fields_index];
   uint8_t product_name_index = fields_index+1;
-  printf("product name index = %d\n",product_name_index);
   fields_index += ((product_name_type_and_length) & 0x3f)+1;
   // only lower 6 bits are is length of field,  upper 2 bits are 'type'
   if(product_name_type_and_length == 0xc1){
