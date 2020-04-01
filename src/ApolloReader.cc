@@ -35,7 +35,6 @@ void ApolloReader::Read(){
 
   ReadInformationLength(ipmiContext_);
 
-
   uint8_t channel_number = 0;
   uint8_t lun = 0;
   uint8_t net_fn = 0xa; // 0xa is net fn for storage
@@ -69,7 +68,9 @@ void ApolloReader::Read(){
 
   for(int i = 3; i < 3+num_bytes_to_read;i++){
     header.push_back(buf_rs[i]);
+
   }
+
 
   ReadHeader();
 
@@ -84,7 +85,6 @@ void ApolloReader::Read(){
 				       net_fn,
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
-    //    printf("raw result = %d\n", raw_result);
 
     /* bytes 3 through 3+num_bytes_to_read are the useful information in buf_rs*/
     for(int i = 3; i < 3+num_bytes_to_read; i++){
@@ -105,9 +105,9 @@ void ApolloReader::Read(){
 
 
   // check if the apollo contains each section of info and read them if so
-  if(internalUseStartingOffset){
+  /*  if(internalUseStartingOffset){
     ReadInternalUse();
-  }
+    }*/
   if(chassisInfoStartingOffset){
     ReadChassisInfo();
   }

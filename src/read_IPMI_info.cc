@@ -68,7 +68,7 @@ int main(int argc, char ** argv){
 					 buf_rs, buf_rs_size);
 
 
-	 
+	 printf("Device found at 0x%02x, fru_id %d\n", deviceAddr, fru_id);	 
 
 	 
 	 int num_zeros = 0;
