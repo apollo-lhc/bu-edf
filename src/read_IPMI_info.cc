@@ -1,9 +1,8 @@
-
 #include <stdio.h>
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
-#include <ApolloReader.hh>
+#include <FruReader.hh>
 
 
 int main(int argc, char ** argv){
@@ -11,7 +10,7 @@ int main(int argc, char ** argv){
   char *hostname = "192.168.10.172";
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
-
+  printf("running shelf scanner for %s:\n", hostname);
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
 					   hostname,
 					   "",
@@ -82,7 +81,7 @@ int main(int argc, char ** argv){
 	 }
 
 	 
-         ApolloReader *apolloReader = new ApolloReader(hostname, deviceAddr);
+         FruReader *apolloReader = new FruReader(hostname, deviceAddr);
 
 	 
 	 std::string board_manufacturer = apolloReader->GetBoardManufacturer();

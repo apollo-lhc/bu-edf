@@ -1,4 +1,4 @@
-#include <ApolloReader.hh>
+#include <FruReader.hh>
 
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-ApolloReader::ApolloReader(char *hostname_, uint8_t deviceAddr){
+FruReader::FruReader(char *hostname_, uint8_t deviceAddr){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
@@ -15,7 +15,7 @@ ApolloReader::ApolloReader(char *hostname_, uint8_t deviceAddr){
 }
 
 
-void ApolloReader::Read(){
+void FruReader::Read(){
 
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
@@ -128,7 +128,7 @@ void ApolloReader::Read(){
 
 
 
-int ApolloReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
+int FruReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
   
   uint8_t channel_number = 0;
   uint8_t lun = 0;
@@ -166,7 +166,7 @@ int ApolloReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 }
 
 
-void ApolloReader::ReadHeader(){
+void FruReader::ReadHeader(){
   // read the first 8 bytes of data, figure out offsets, how many bytes are used
   headerFormatVersion = header[0];
   internalUseStartingOffset = header[1]*8;
@@ -183,7 +183,7 @@ void ApolloReader::ReadHeader(){
 }
 
 
-void ApolloReader::ReadInternalUse(){
+void FruReader::ReadInternalUse(){
   int lenInternalUse = data[internalUseStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + internalUseStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + internalUseStartingOffset + lenInternalUse;
@@ -201,7 +201,7 @@ void ApolloReader::ReadInternalUse(){
 
 
 
-void ApolloReader::ReadChassisInfo(){
+void FruReader::ReadChassisInfo(){
   printf("chassisInfoStartingOffset %d\n", chassisInfoStartingOffset);
   int lenChassis = data[chassisInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + chassisInfoStartingOffset;
@@ -220,7 +220,7 @@ void ApolloReader::ReadChassisInfo(){
 
 
 
-void ApolloReader::ReadBoardArea(){
+void FruReader::ReadBoardArea(){
   //  printf("board info:");
   int lenBoardArea = data[boardStartingOffset+1]*8;  
   std::vector<uint8_t>::const_iterator first = data.begin() + boardStartingOffset;
@@ -286,7 +286,7 @@ void ApolloReader::ReadBoardArea(){
   fruFileId = ReadBoardField(fru_file_id_type_and_length, fru_file_id_index);
   // END FRU FILE ID  
 }
-std::string ApolloReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
+std::string FruReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
   uint8_t field_type = ((field_type_and_length) & 0xc0);
   std::string field = "";
@@ -296,19 +296,19 @@ std::string ApolloReader::ReadBoardField(uint8_t field_type_and_length, uint8_t 
   return field;
 }
 
-std::string ApolloReader::GetBoardManufacturer(){
+std::string FruReader::GetBoardManufacturer(){
   return boardManufacturer;
 }
-std::string ApolloReader::GetBoardName(){
+std::string FruReader::GetBoardName(){
   return boardName;
 }
-std::string ApolloReader::GetBoardSerial(){
+std::string FruReader::GetBoardSerial(){
   return boardSerial;
 }
-std::string ApolloReader::GetBoardPartNumber(){
+std::string FruReader::GetBoardPartNumber(){
   return boardPartNumber;
 }
-std::string ApolloReader::GetFruFileId(){
+std::string FruReader::GetFruFileId(){
   return fruFileId;
 }
 
@@ -318,7 +318,7 @@ std::string ApolloReader::GetFruFileId(){
 
 
 
-void ApolloReader::ReadProductInfo(){
+void FruReader::ReadProductInfo(){
   //  printf("product info:");
   int lenProductInfo = data[productInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
@@ -400,7 +400,7 @@ void ApolloReader::ReadProductInfo(){
   // END ASSET TAG
 
 }
-std::string ApolloReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
+std::string FruReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
   uint8_t field_type = ((field_type_and_length) & 0xc0);
   std::string field = "";
@@ -409,22 +409,22 @@ std::string ApolloReader::ReadProductField(uint8_t field_type_and_length, uint8_
   }
   return field;
 }
-std::string ApolloReader::GetProductManufacturer(){
+std::string FruReader::GetProductManufacturer(){
   return productManufacturer;
 }
-std::string ApolloReader::GetProductName(){
+std::string FruReader::GetProductName(){
   return productName;
 }
-std::string ApolloReader::GetProductPartNumber(){
+std::string FruReader::GetProductPartNumber(){
   return productPartNumber;
 }
-std::string ApolloReader::GetProductVersion(){
+std::string FruReader::GetProductVersion(){
   return productVersion;
 }
-std::string ApolloReader::GetProductSerial(){
+std::string FruReader::GetProductSerial(){
   return productSerial;
 }
-std::string ApolloReader::GetAssetTag(){
+std::string FruReader::GetAssetTag(){
   return assetTag;
 }
 
@@ -437,16 +437,16 @@ std::string ApolloReader::GetAssetTag(){
 
 
 
-void ApolloReader::ReadMultiRecord(){
+void FruReader::ReadMultiRecord(){
 
 }
 
 
-std::vector<uint8_t> ApolloReader::GetHeader(){
+std::vector<uint8_t> FruReader::GetHeader(){
   return header;
 }
 
 
-std::vector<uint8_t> ApolloReader::GetData(){
+std::vector<uint8_t> FruReader::GetData(){
   return data;
 }

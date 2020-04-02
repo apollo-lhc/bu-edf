@@ -1,15 +1,15 @@
-#ifndef __APOLLO__READER__HH__
-#define __APOLLO__READER__HH__
+#ifndef __FRU__READER__HH__
+#define __FRU__READER__HH__
 
 #include <string>
 #include <vector>
 #include <freeipmi/api/ipmi-api.h>
 
-class ApolloReader {
+class FruReader {
 
 public:
 
-  ApolloReader(char *hostname_, uint8_t deviceAddr);
+  FruReader(char *hostname_, uint8_t deviceAddr);
   
   std::vector<uint8_t> GetHeader();
 
