@@ -1,15 +1,15 @@
-#ifndef __APOLLO__READER__HH__
-#define __APOLLO__READER__HH__
+#ifndef __FRU__READER__HH__
+#define __FRU__READER__HH__
 
 #include <string>
 #include <vector>
 #include <freeipmi/api/ipmi-api.h>
 
-class ApolloReader {
+class FruReader {
 
 public:
 
-  ApolloReader(char *hostname_, uint8_t deviceAddr);
+  FruReader(char *hostname_, uint8_t deviceAddr);
   
   std::vector<uint8_t> GetHeader();
 
@@ -53,14 +53,14 @@ private:
   
   std::vector<uint8_t> header;
   // fields for data stored in header
-  uint8_t headerFormatVersion;
-  uint8_t internalUseStartingOffset;
-  uint8_t chassisInfoStartingOffset;
-  uint8_t boardStartingOffset;
-  uint8_t productInfoStartingOffset;
-  uint8_t multiRecordStartingOffset;
-  uint8_t pad;
-  uint8_t commonHeaderChecksum;
+  int headerFormatVersion;
+  int internalUseStartingOffset;
+  int chassisInfoStartingOffset;
+  int boardStartingOffset;
+  int productInfoStartingOffset;
+  int multiRecordStartingOffset;
+  int pad;
+  int commonHeaderChecksum;
 
   // raw hex data from the blade
   std::vector<uint8_t> data;
