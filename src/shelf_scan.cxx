@@ -3,14 +3,42 @@
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
 #include <FruReader.hh>
+#include <boost/program_options.hpp>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
+namespace po = boost::program_options;
 
 int main(int argc, char ** argv){
 
-  char *hostname = "192.168.10.172";
+   char *hostname;
+   try {
+     po::options_description desc{"Options"};
+     desc.add_options()
+       ("host", po::value<std::string>(), "value");
+
+    po::variables_map vm;
+    po::store(parse_command_line(argc, argv, desc),vm);
+    po::notify(vm);
+
+
+    if (vm.count("host")){
+      hostname =  new char[vm["host"].as<std::string>().size() + 1];
+      std::string str_hostname = vm["host"].as<std::string>();
+      std::copy( str_hostname.begin(),  str_hostname.end(), hostname);
+      hostname[str_hostname.size()] = '\0';
+    } else {
+      hostname = "192.168.10.171"; 
+    }
+    
+    } catch ( const po::error &ex ){
+     std::cerr << ex.what() << '\n';
+    }
+  
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
-  printf("running shelf scanner for %s:\n", hostname);
+  //  printf("running shelf scanner for %s:\n", hostname);
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
 					   hostname,
 					   "",
@@ -67,7 +95,7 @@ int main(int argc, char ** argv){
 					 buf_rs, buf_rs_size);
 
 
-	 printf("Device found at 0x%02x, fru_id %d\n", deviceAddr, fru_id);	 
+	 //	 printf("Device found at 0x%02x, fru_id %d\n", deviceAddr, fru_id);	 
 
 	 
 	 int num_zeros = 0;
@@ -81,9 +109,9 @@ int main(int argc, char ** argv){
 	 }
 
 	 
-         FruReader *apolloReader = new FruReader(hostname, deviceAddr);
-
-	 
+         FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id);
+	 apolloReader->PrintFruInfo(false);
+	 /*
 	 std::string board_manufacturer = apolloReader->GetBoardManufacturer();
 	 if(board_manufacturer != ""){
 	   printf("board manufacturer: %s\n", board_manufacturer.c_str());
@@ -128,8 +156,8 @@ int main(int argc, char ** argv){
          std::string asset_tag = apolloReader->GetAssetTag();
 	 if(asset_tag != ""){
 	   printf("asset tag: %s\n", asset_tag.c_str());
-	 }
-         printf("\n\n\n");
+	 }*/
+
       
 	 fru_id++;
 	 buf_rq[1] = fru_id;
@@ -146,8 +174,6 @@ int main(int argc, char ** argv){
        break;
      }
   }
-  printf("done\n");  
-
   return 0;
 
 }
