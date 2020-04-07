@@ -7,13 +7,27 @@
 #include <string.h>
 #include <string>
 
-FruReader::FruReader(char *hostname_, uint8_t deviceAddr){
+FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
+  fru_id = fru_id_;
   Read();
+ 
 }
 
+void FruReader::PrintFruInfo(bool verbose){
+  if(!verbose){
+    printf("0x%02x(%d)", deviceAccessAddress, fru_id);
+    if(productName != ""){
+      printf(" : %*s", 10, productName.c_str());
+    }
+    if(productSerial != ""){
+      printf(" : %*s", 10, productSerial.c_str());
+    }
+  }
+  printf("\n");
+}
 
 void FruReader::Read(){
 
@@ -43,7 +57,7 @@ void FruReader::Read(){
   uint8_t buf_rq[buf_rq_size];
 
   uint8_t read_code = 0x11;
-  uint8_t fru_id = 0;
+  //  uint8_t fru_id = 0;
   uint8_t starting_byte_ls = 0;
   uint8_t starting_byte_ms = 0;
   uint8_t num_bytes_to_read = 8;
@@ -138,7 +152,7 @@ int FruReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
   uint8_t buf_rq[buf_rq_size];
 
   uint8_t read_code = 0x10;
-  uint8_t fru_id = 0;
+  //  uint8_t fru_id = 0;
 
   buf_rq[0] = read_code;
   buf_rq[1] = fru_id;
@@ -202,18 +216,18 @@ void FruReader::ReadInternalUse(){
 
 
 void FruReader::ReadChassisInfo(){
-  printf("chassisInfoStartingOffset %d\n", chassisInfoStartingOffset);
+
   int lenChassis = data[chassisInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + chassisInfoStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + chassisInfoStartingOffset + lenChassis;
   chassisData = std::vector<uint8_t>(first, last);
-  for (int i = 0; i < chassisData.size(); i++){                                            
+  /*  for (int i = 0; i < chassisData.size(); i++){                                            
     if(i % 8 == 0){                                                                      
       printf("\n");                                                                      
     }                                                                                    
     printf("%02x ", chassisData[i]);                                                       
   }                                                                                      
-  printf("\n");
+  printf("\n");*/
 
 }
 
@@ -429,14 +443,6 @@ std::string FruReader::GetAssetTag(){
 }
 
 
-
-
-
-
-
-
-
-
 void FruReader::ReadMultiRecord(){
 
 }
@@ -449,4 +455,8 @@ std::vector<uint8_t> FruReader::GetHeader(){
 
 std::vector<uint8_t> FruReader::GetData(){
   return data;
+}
+
+int FruReader::GetFruId(){
+  return fru_id;
 }

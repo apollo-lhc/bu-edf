@@ -9,12 +9,14 @@ class FruReader {
 
 public:
 
-  FruReader(char *hostname_, uint8_t deviceAddr);
+  FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_);
+
+  void PrintFruInfo(bool verbose);
   
   std::vector<uint8_t> GetHeader();
-
   std::vector<uint8_t> GetData();
-
+  int GetFruId();
+  
   // board fields
   std::string GetBoardManufacturer();
   std::string GetBoardName();
@@ -48,8 +50,8 @@ private:
   int total_bytes_used;
   
   char *hostname;
-  
   uint8_t deviceAccessAddress;
+  int fru_id;
   
   std::vector<uint8_t> header;
   // fields for data stored in header

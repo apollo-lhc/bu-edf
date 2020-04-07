@@ -32,7 +32,7 @@ int main(int argc, char ** argv){
       ("sensor", po::value<std::string>(), "value")
       ("apollo", po::value<std::string>(), "value");
 
-    std::string configFileName = "sensors.config";
+    std::string configFileName = "example.config";
     if(argc > 1){
       configFileName=argv[1];
     }
