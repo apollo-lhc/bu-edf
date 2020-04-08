@@ -1,4 +1,4 @@
-#include <Sensor.hh>
+#include <base/Sensor.hh>
 #include <vector>
 
 class ApolloBlade : public Sensor {

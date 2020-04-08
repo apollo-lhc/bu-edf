@@ -1,5 +1,5 @@
-#include <net_helpers.hh>
-#include <Sensor.hh>
+#include <base/Sensor.hh>
+#include <base/net_helpers.hh>
 
 #include <string.h>
 #include <time.h>

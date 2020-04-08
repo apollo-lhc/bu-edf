@@ -5,11 +5,11 @@
 #include <vector>
 #include <freeipmi/api/ipmi-api.h>
 
-class FruReader {
+class FRUReader {
 
 public:
 
-  FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_);
+  FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_);
 
   void PrintFruInfo(bool verbose);
   

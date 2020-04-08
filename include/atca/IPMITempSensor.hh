@@ -1,9 +1,9 @@
-#include <Sensor.hh>
+#include <base/Sensor.hh>
 
-class IpmiTemperatureSensor : public Sensor {
+class IPMITempSensor : public Sensor {
 
 public:
-  IpmiTemperatureSensor(int sensorNum, std::string dbName,  char *hostname_,  uint8_t deviceAddr);
+  IPMITempSensor(int sensorNum, std::string dbName,  char *hostname_,  uint8_t deviceAddr);
 
   void SetSensorNumber(int sensorNum);
 

@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 
-struct IpmbSensorResult {
+struct IPMBSensorResult {
   uint8_t empty_byte1;
   uint8_t empty_byte22;
   uint8_t sensorValue;

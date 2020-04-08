@@ -1,14 +1,12 @@
 #include <iostream>
-#include <net_helpers.hh>
-#include <Sensor.hh>
-#include <TimeSensor.hh>
-#include <IpmiTemperatureSensor.hh>
-#include <IpmiFanSpeedSensor.hh>
-#include <ApolloBlade.hh>
+#include <base/net_helpers.hh>
+#include <base/Sensor.hh>
+#include <atca/IPMITempSensor.hh>
+#include <atca/IPMIFanSpeedSensor.hh>
+#include <atca/ApolloBlade.hh>
 #include <unistd.h>
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <boost/program_options.hpp>
 #include <stdexcept>
 
@@ -81,14 +79,14 @@ int main(int argc, char ** argv){
 		   wsp_filename.c_str()
 		   );
 	    // make sensor objects. We currently can only make Ipmi Temp or Fanspeed sensors
-	    if (sensor_type == "IpmiTemperature") {
-	      Sensor *tempSensor = new IpmiTemperatureSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
+	    if (sensor_type == "IPMITemp") {
+	      Sensor *tempSensor = new IPMITempSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(tempSensor);
 	      //	      sensors[i]->Connect(IP_addr, port_number);
 	      tempSensor->Connect(IP_addr, port_number);
 	      // made esnsor of type ./..
-	    } else if (sensor_type == "IpmiFanspeed") {
-	      Sensor *fanspeedSensor = new IpmiFanSpeedSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
+	    } else if (sensor_type == "IPMIFanspeed") {
+	      Sensor *fanspeedSensor = new IPMIFanSpeedSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
 	      sensors.push_back(fanspeedSensor);
 	      //	      sensors[i]->Connect(IP_addr, port_number);
 	      fanspeedSensor->Connect(IP_addr, port_number);

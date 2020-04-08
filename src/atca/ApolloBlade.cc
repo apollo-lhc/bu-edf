@@ -1,5 +1,5 @@
-#include <ApolloBlade.hh>
-#include <IpmiTemperatureSensor.hh>
+#include <atca/ApolloBlade.hh>
+#include <atca/IPMITempSensor.hh>
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
@@ -34,55 +34,55 @@ void ApolloBlade::SetDeviceAccessAddress(uint8_t deviceAddr){
 
 void ApolloBlade::SetSensors(){
 
-  Sensor *internal = new IpmiTemperatureSensor(3, databaseBase + "InternalTemp", hostname, deviceAccessAddress);
+  Sensor *internal = new IPMITempSensor(3, databaseBase + "InternalTemp", hostname, deviceAccessAddress);
   if (internal != NULL){
     apolloSensors.push_back(internal);
   }
-  Sensor *U34 = new IpmiTemperatureSensor(4, databaseBase + "Top", hostname, deviceAccessAddress);
+  Sensor *U34 = new IPMITempSensor(4, databaseBase + "Top", hostname, deviceAccessAddress);
   if (U34 != NULL){
     apolloSensors.push_back(U34);
   }
-  Sensor *U35 = new IpmiTemperatureSensor(5, databaseBase +  "Bottom", hostname, deviceAccessAddress);
+  Sensor *U35 = new IPMITempSensor(5, databaseBase +  "Bottom", hostname, deviceAccessAddress);
   if(U35 != NULL){
     apolloSensors.push_back(U35);
   }
-  Sensor *U36 = new IpmiTemperatureSensor(6, databaseBase + "Middle", hostname, deviceAccessAddress);
+  Sensor *U36 = new IPMITempSensor(6, databaseBase + "Middle", hostname, deviceAccessAddress);
   if(U36 != NULL){
     apolloSensors.push_back(U36);
   }
-  Sensor *CMmicroController = new IpmiTemperatureSensor(7, databaseBase + "CommandModuleMicroController", hostname, deviceAccessAddress);
+  Sensor *CMmicroController = new IPMITempSensor(7, databaseBase + "CommandModuleMicroController", hostname, deviceAccessAddress);
   if(CMmicroController != NULL){
     apolloSensors.push_back(CMmicroController);
   }
-  Sensor *FF = new IpmiTemperatureSensor(8, databaseBase + "Firefly", hostname, deviceAccessAddress);
+  Sensor *FF = new IPMITempSensor(8, databaseBase + "Firefly", hostname, deviceAccessAddress);
   if(CMmicroController != NULL){
     apolloSensors.push_back(FF);
   }
-  Sensor *CMfpga = new IpmiTemperatureSensor(9, databaseBase + "CommandModuleFPGA", hostname, deviceAccessAddress);
+  Sensor *CMfpga = new IPMITempSensor(9, databaseBase + "CommandModuleFPGA", hostname, deviceAccessAddress);
   if(CMfpga != NULL){
     apolloSensors.push_back(CMfpga);
   }
-  Sensor *CMregulator = new IpmiTemperatureSensor(10, databaseBase + "CommandModuleRegulator", hostname, deviceAccessAddress);
+  Sensor *CMregulator = new IPMITempSensor(10, databaseBase + "CommandModuleRegulator", hostname, deviceAccessAddress);
   if(CMfpga != NULL){
     apolloSensors.push_back(CMfpga);
   }
-  Sensor *CMmcu = new IpmiTemperatureSensor(11, databaseBase + "CommandModuleMCU", hostname, deviceAccessAddress);
+  Sensor *CMmcu = new IPMITempSensor(11, databaseBase + "CommandModuleMCU", hostname, deviceAccessAddress);
   if(CMmcu != NULL){
     apolloSensors.push_back(CMmcu);
   }
-  Sensor *CMfpgaVU = new IpmiTemperatureSensor(12, databaseBase + "CommandModuleFPGAVU", hostname, deviceAccessAddress);
+  Sensor *CMfpgaVU = new IPMITempSensor(12, databaseBase + "CommandModuleFPGAVU", hostname, deviceAccessAddress);
   if(CMfpgaVU != NULL){
     apolloSensors.push_back(CMfpgaVU);
   }
-  Sensor *CMfpgaKU = new IpmiTemperatureSensor(13, databaseBase + "CommandModuleFPGAKU", hostname, deviceAccessAddress);
+  Sensor *CMfpgaKU = new IPMITempSensor(13, databaseBase + "CommandModuleFPGAKU", hostname, deviceAccessAddress);
   if(CMfpgaKU != NULL){
     apolloSensors.push_back(CMfpgaKU);
   }
-  Sensor *FF2 = new IpmiTemperatureSensor(14, databaseBase + "Firefly2", hostname, deviceAccessAddress);
+  Sensor *FF2 = new IPMITempSensor(14, databaseBase + "Firefly2", hostname, deviceAccessAddress);
   if(FF2 != NULL){
     apolloSensors.push_back(FF2);
   }
-  Sensor *CMregulator2 = new IpmiTemperatureSensor(15, databaseBase + "CommandModuleRegulator2", hostname, deviceAccessAddress);
+  Sensor *CMregulator2 = new IPMITempSensor(15, databaseBase + "CommandModuleRegulator2", hostname, deviceAccessAddress);
   if(CMregulator2 != NULL){
     apolloSensors.push_back(CMregulator2);
   }

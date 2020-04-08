@@ -1,4 +1,4 @@
-#include <FruReader.hh>
+#include <atca/FRUReader.hh>
 
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
+FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
@@ -16,7 +16,7 @@ FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
  
 }
 
-void FruReader::PrintFruInfo(bool verbose){
+void FRUReader::PrintFruInfo(bool verbose){
   if(!verbose){
     printf("0x%02x(%d)", deviceAccessAddress, fru_id);
     if(productName != ""){
@@ -29,7 +29,7 @@ void FruReader::PrintFruInfo(bool verbose){
   printf("\n");
 }
 
-void FruReader::Read(){
+void FRUReader::Read(){
 
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
@@ -142,7 +142,7 @@ void FruReader::Read(){
 
 
 
-int FruReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
+int FRUReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
   
   uint8_t channel_number = 0;
   uint8_t lun = 0;
@@ -180,7 +180,7 @@ int FruReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 }
 
 
-void FruReader::ReadHeader(){
+void FRUReader::ReadHeader(){
   // read the first 8 bytes of data, figure out offsets, how many bytes are used
   headerFormatVersion = header[0];
   internalUseStartingOffset = header[1]*8;
@@ -197,7 +197,7 @@ void FruReader::ReadHeader(){
 }
 
 
-void FruReader::ReadInternalUse(){
+void FRUReader::ReadInternalUse(){
   int lenInternalUse = data[internalUseStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + internalUseStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + internalUseStartingOffset + lenInternalUse;
@@ -215,7 +215,7 @@ void FruReader::ReadInternalUse(){
 
 
 
-void FruReader::ReadChassisInfo(){
+void FRUReader::ReadChassisInfo(){
 
   int lenChassis = data[chassisInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + chassisInfoStartingOffset;
@@ -234,7 +234,7 @@ void FruReader::ReadChassisInfo(){
 
 
 
-void FruReader::ReadBoardArea(){
+void FRUReader::ReadBoardArea(){
   //  printf("board info:");
   int lenBoardArea = data[boardStartingOffset+1]*8;  
   std::vector<uint8_t>::const_iterator first = data.begin() + boardStartingOffset;
@@ -300,7 +300,7 @@ void FruReader::ReadBoardArea(){
   fruFileId = ReadBoardField(fru_file_id_type_and_length, fru_file_id_index);
   // END FRU FILE ID  
 }
-std::string FruReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
+std::string FRUReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
   uint8_t field_type = ((field_type_and_length) & 0xc0);
   std::string field = "";
@@ -310,19 +310,19 @@ std::string FruReader::ReadBoardField(uint8_t field_type_and_length, uint8_t fie
   return field;
 }
 
-std::string FruReader::GetBoardManufacturer(){
+std::string FRUReader::GetBoardManufacturer(){
   return boardManufacturer;
 }
-std::string FruReader::GetBoardName(){
+std::string FRUReader::GetBoardName(){
   return boardName;
 }
-std::string FruReader::GetBoardSerial(){
+std::string FRUReader::GetBoardSerial(){
   return boardSerial;
 }
-std::string FruReader::GetBoardPartNumber(){
+std::string FRUReader::GetBoardPartNumber(){
   return boardPartNumber;
 }
-std::string FruReader::GetFruFileId(){
+std::string FRUReader::GetFruFileId(){
   return fruFileId;
 }
 
@@ -332,7 +332,7 @@ std::string FruReader::GetFruFileId(){
 
 
 
-void FruReader::ReadProductInfo(){
+void FRUReader::ReadProductInfo(){
   //  printf("product info:");
   int lenProductInfo = data[productInfoStartingOffset+1]*8;
   std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
@@ -414,7 +414,7 @@ void FruReader::ReadProductInfo(){
   // END ASSET TAG
 
 }
-std::string FruReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
+std::string FRUReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
   uint8_t field_type = ((field_type_and_length) & 0xc0);
   std::string field = "";
@@ -423,40 +423,40 @@ std::string FruReader::ReadProductField(uint8_t field_type_and_length, uint8_t f
   }
   return field;
 }
-std::string FruReader::GetProductManufacturer(){
+std::string FRUReader::GetProductManufacturer(){
   return productManufacturer;
 }
-std::string FruReader::GetProductName(){
+std::string FRUReader::GetProductName(){
   return productName;
 }
-std::string FruReader::GetProductPartNumber(){
+std::string FRUReader::GetProductPartNumber(){
   return productPartNumber;
 }
-std::string FruReader::GetProductVersion(){
+std::string FRUReader::GetProductVersion(){
   return productVersion;
 }
-std::string FruReader::GetProductSerial(){
+std::string FRUReader::GetProductSerial(){
   return productSerial;
 }
-std::string FruReader::GetAssetTag(){
+std::string FRUReader::GetAssetTag(){
   return assetTag;
 }
 
 
-void FruReader::ReadMultiRecord(){
+void FRUReader::ReadMultiRecord(){
 
 }
 
 
-std::vector<uint8_t> FruReader::GetHeader(){
+std::vector<uint8_t> FRUReader::GetHeader(){
   return header;
 }
 
 
-std::vector<uint8_t> FruReader::GetData(){
+std::vector<uint8_t> FRUReader::GetData(){
   return data;
 }
 
-int FruReader::GetFruId(){
+int FRUReader::GetFruId(){
   return fru_id;
 }

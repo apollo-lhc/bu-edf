@@ -2,44 +2,45 @@ CXX=g++
 
 CXXFLAGS=-Iinclude -std=c++11
 
-LD_FLAGS=-lfreeipmi -lboost_program_options
+LD_FLAGS=-lboost_program_options
 
 SRC=src
-
-DEPS=include/%.hh
-
 BUILD=build
+BIN=bin
 
-LIB=lib
+BASE_SRC=$(wildcard $(SRC)/base/*.cc)
+BASE_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(BASE_SRC))
 
-OBJ_MONITOR=$(BUILD)/shelf_monitor.o \
-	$(BUILD)/net_helpers.o \
-	$(BUILD)/TimeSensor.o \
-	$(BUILD)/Sensor.o \
-	$(BUILD)/IpmiTemperatureSensor.o \
-	$(BUILD)/IpmiFanSpeedSensor.o \
-	$(BUILD)/ApolloBlade.o
+ATCA_SRC=$(wildcard $(SRC)/atca/*.cc)
+ATCA_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(ATCA_SRC))
 
-OBJ_SCAN=$(BUILD)/shelf_scan.o\
-	$(BUILD)/FruReader.o
+SHELF_MONITOR_OBJ=$(BUILD)/shelf_monitor.o $(BASE_OBJ) $(ATCA_OBJ)
+SHELF_MONITOR_LIB=-lfreeipmi 
 
-.PHONEY: all clean
+SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ)
+SHELF_SCAN_LIB=-lfreeipmi 
 
-all: shelf_monitor shelf_scan
+.PHONEY: all clean dist_clean
 
-shelf_monitor: $(OBJ_MONITOR) 
-	$(CXX) -o $@ $^ $(LD_FLAGS)
+all: $(BIN)/shelf_monitor $(BIN)/shelf_scan
+
+$(BIN)/shelf_monitor: $(SHELF_MONITOR_OBJ)
+	mkdir -p $(dir $@)
+	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_MONITOR_LIB)
+
+$(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
+	mkdir -p $(dir $@)
+	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_SCAN_LIB)
 
 $(BUILD)/%.o: $(SRC)/%.cc
-	mkdir -p $(BUILD)
+	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 $(BUILD)/%.o: $(SRC)/%.cxx
-	mkdir -p $(BUILD)
+	mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-shelf_scan: $(OBJ_SCAN)
-	$(CXX) -o $@ $^ $(LD_FLAGS)
-
 clean:
-	rm -f $(OBJ_MONITOR) $(OBJ_SCAN)
+	rm -rf $(BUILD)
+dist_clean: clean
+	rm -rf $(BIN)

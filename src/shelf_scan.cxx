@@ -2,9 +2,8 @@
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
-#include <FruReader.hh>
+#include <atca/FRUReader.hh>
 #include <boost/program_options.hpp>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -109,7 +108,7 @@ int main(int argc, char ** argv){
 	 }
 
 	 
-         FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id);
+         FRUReader *apolloReader = new FRUReader(hostname, deviceAddr, fru_id);
 	 apolloReader->PrintFruInfo(false);
 	 /*
 	 std::string board_manufacturer = apolloReader->GetBoardManufacturer();
