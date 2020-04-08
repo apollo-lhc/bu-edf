@@ -20,7 +20,7 @@ SHELF_MONITOR_LIB=-lfreeipmi
 SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ)
 SHELF_SCAN_LIB=-lfreeipmi 
 
-.PHONEY: all clean dist_clean
+.PHONEY: all clean distclean
 
 all: $(BIN)/shelf_monitor $(BIN)/shelf_scan
 
@@ -42,5 +42,5 @@ $(BUILD)/%.o: $(SRC)/%.cxx
 
 clean:
 	rm -rf $(BUILD)
-dist_clean: clean
+distclean: clean
 	rm -rf $(BIN)
