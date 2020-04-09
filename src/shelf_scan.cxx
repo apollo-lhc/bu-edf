@@ -47,11 +47,12 @@ int main(int argc, char ** argv){
 					   IPMI_PRIVILEGE_LEVEL_ADMIN,
 					   0,0,0,0);
 
-    if (connection < 0){
-      printf("bad connection\n");
-      //throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
-    }
-
+  if (connection < 0){
+    printf("bad connection!!!!\n");
+    throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
+    return 0;
+  }
+  
   uint8_t deviceAddr = 0x02;
   uint8_t channel_number = 0;
   uint8_t lun = 0;
@@ -68,112 +69,58 @@ int main(int argc, char ** argv){
   const size_t buf_rs_size = 256;
   uint8_t buf_rs[buf_rs_size];
 
-
-
-  
+  // check every ipmb address
   while(deviceAddr < 256){
-    int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
-				       channel_number,
-				       deviceAddr,
-				       lun,
-				       net_fn,
-				       (void const *) buf_rq, buf_rq_size,
-				       buf_rs, buf_rs_size);
+    try{
 
-     if (raw_result < 0){
-      deviceAddr += 2;
-     } else {
+      int raw_res_fru = 0;
+      // check address until we reach invalid fru id
+      while(raw_res_fru >= 0){
 
-       int raw_res_fru = 0;
-       while(raw_res_fru >= 0){
-	 raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,
-					 channel_number,
-					 deviceAddr,
-					 lun,
-					 net_fn,
-					 (void const *) buf_rq, buf_rq_size,
-					 buf_rs, buf_rs_size);
+	FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id);
+
+	// check at this address and fru id for how many bytes are stored
+	raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,
+					channel_number,
+					deviceAddr,
+					lun,
+					net_fn,
+					(void const *) buf_rq, buf_rq_size,
+					buf_rs, buf_rs_size);
+	
+	// if the raw ipmb command above gives 00 00 00, there is no device there
+	int num_zeros = 0;
+	for ( int i = 2; i < 5;i++){
+	  if (buf_rs[i] == 0x00) {
+	    num_zeros++;
+	  }
+	}
+	if(num_zeros == 3){
+	  break;
+	}
+
+	apolloReader->PrintFruInfo(false);
+	fru_id++;
+	buf_rq[1] = fru_id;
+      }
+      //      printf("here\n");
+      //}
 
 
-	 //	 printf("Device found at 0x%02x, fru_id %d\n", deviceAddr, fru_id);	 
 
-	 
-	 int num_zeros = 0;
-	 for ( int i = 2; i < 5;i++){
-	   if (buf_rs[i] == 0x00) {
-	     num_zeros++;
-	   }
-	 }
-	 if(num_zeros == 3){
-	   break;
-	 }
+    } catch(std::runtime_error &e) {
 
-	 
-         FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id);
-	 apolloReader->PrintFruInfo(false);
-	 /*
-	 std::string board_manufacturer = apolloReader->GetBoardManufacturer();
-	 if(board_manufacturer != ""){
-	   printf("board manufacturer: %s\n", board_manufacturer.c_str());
-	 }
-         std::string board_name = apolloReader->GetBoardName();
-	 if(board_name != ""){
-	   printf("board name: %s\n",  board_name.c_str());
-	 }
-         std::string board_serial = apolloReader->GetBoardSerial();
-	 if(board_serial != ""){
-	   printf("board serial: %s\n", board_serial.c_str());
-	 }
-         std::string board_part_num = apolloReader->GetBoardPartNumber();
-	 if(board_part_num != ""){
-	   printf("board part num: %s\n", board_part_num.c_str());
-	 }
-         std::string fru_file_id = apolloReader->GetFruFileId();
-	 if(fru_file_id != ""){
-	   printf("fru file id: %s\n", fru_file_id.c_str());
-         }
-	 
-         std::string product_manufacturer = apolloReader->GetProductManufacturer();
-	 if(product_manufacturer != ""){
-	   printf("product manufacturer: %s\n", product_manufacturer.c_str());
-	 }
-         std::string product_name = apolloReader->GetProductName();
-	 if(product_name != ""){
-	   printf("product name: %s\n", product_name.c_str());
-	 }
-         std::string product_num = apolloReader->GetProductPartNumber();
-	 if(product_num != ""){
-	   printf("product part number: %s\n", product_num.c_str());
-	 }
-         std::string product_version = apolloReader->GetProductVersion();
-	 if(product_version != ""){
-	   printf("product version: %s\n", product_version.c_str());
-	 }
-         std::string product_serial = apolloReader->GetProductSerial();
-	 if(product_serial != ""){
-	   printf("product serial: %s\n", product_serial.c_str());
-	 }
-         std::string asset_tag = apolloReader->GetAssetTag();
-	 if(asset_tag != ""){
-	   printf("asset tag: %s\n", asset_tag.c_str());
-	 }*/
-
-      
-	 fru_id++;
-	 buf_rq[1] = fru_id;
-         	 
-	 if (deviceAddr == 0xfe){
-	   break;
-	 }
-       }
-       fru_id = 0;
-       buf_rq[1] = fru_id;
-       deviceAddr += 2;
-     }
-     if (deviceAddr == 0xfe){
-       break;
-     }
+    }
+    if (deviceAddr == 0xfe){
+      break;
+    }
+    fru_id = 0;
+    buf_rq[1] = fru_id;
+    deviceAddr += 2;
   }
+  
+  
+  //}
   return 0;
-
+  
 }
