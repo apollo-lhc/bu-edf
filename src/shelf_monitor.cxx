@@ -10,6 +10,8 @@
 #include <boost/program_options.hpp>
 #include <stdexcept>
 
+#include <ApolloMonitor/ApolloMonitor.hh>
+
 namespace po = boost::program_options;
 
 
@@ -17,18 +19,19 @@ std::vector<std::string> split_sensor_string(std::string sensor, std::string del
 
 int main(int argc, char ** argv){
 
-  std::string const &IP_addr = "127.0.0.1";
+  std::string const &IP_addr = "192.168.10.20";//"127.0.0.1";
   int port_number = 2003; // plaintext data port
 
   // create map that we'll put sensors in
   std::vector<Sensor*> sensors;
-
+  fprintf(stderr,"asdfasdfasdf\n");
   try {
     po::options_description fileOptions{"File"};
 
     fileOptions.add_options()
       ("sensor", po::value<std::string>(), "value")
-      ("apollo", po::value<std::string>(), "value");
+      ("apollo", po::value<std::string>(), "value")
+      ("am", po::value<std::string>(), "value");
 
     std::string configFileName = "example.config";
     if(argc > 1){
@@ -97,8 +100,12 @@ int main(int argc, char ** argv){
 	    std::cout << e.what() << std::endl;
 	  }
 	}
-
-
+	else if(option == "am") {
+	  fprintf(stderr,"asdf\n");
+	  Sensor *apolloBlade = new ApolloMonitor("","/opt/address_tables/connections.xml");
+	  sensors.push_back(apolloBlade);
+	  apolloBlade->Connect(IP_addr, port_number);
+        }
 	else if(option == "apollo") {
           // vector that we'll split the string into                                                                               
 	  std::vector<std::string> apollo_info;

@@ -1,8 +1,8 @@
 CXX=g++
 
-CXXFLAGS=-Iinclude -std=c++11
+CXXFLAGS=-Iinclude -std=c++11 -I/opt/BUTool/include -I/opt/cactus/include
 
-LD_FLAGS=-lboost_program_options
+LD_FLAGS=-L/opt/BUTool/lib -lboost_program_options -lboost_system -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO
 
 SRC=src
 BUILD=build
@@ -14,10 +14,13 @@ BASE_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(BASE_SRC))
 ATCA_SRC=$(wildcard $(SRC)/atca/*.cc)
 ATCA_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(ATCA_SRC))
 
-SHELF_MONITOR_OBJ=$(BUILD)/shelf_monitor.o $(BASE_OBJ) $(ATCA_OBJ)
+APOLLO_MONITOR_SRC=$(wildcard $(SRC)/ApolloMonitor/*.cc)
+APOLLO_MONITOR_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(APOLLO_MONITOR_SRC))
+
+SHELF_MONITOR_OBJ=$(BUILD)/shelf_monitor.o $(BASE_OBJ) $(ATCA_OBJ) $(APOLLO_MONITOR_OBJ)
 SHELF_MONITOR_LIB=-lfreeipmi 
 
-SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ)
+SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ) 
 SHELF_SCAN_LIB=-lfreeipmi 
 
 .PHONEY: all clean distclean
@@ -26,7 +29,7 @@ all: $(BIN)/shelf_monitor $(BIN)/shelf_scan
 
 $(BIN)/shelf_monitor: $(SHELF_MONITOR_OBJ)
 	mkdir -p $(dir $@)
-	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_MONITOR_LIB)
+	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_MONITOR_LIB) -Wl,-rpath=/opt/BUTool/lib
 
 $(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
 	mkdir -p $(dir $@)
