@@ -6,3 +6,5 @@
 main
 *.config
 !config/*.config
+build
+bin
