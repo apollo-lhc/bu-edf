@@ -38,7 +38,7 @@ int main(int argc, char ** argv){
   
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
-  //  printf("running shelf scanner for %s:\n", hostname);
+  //  printf("running shelf scanner for %s:\n", hostname); // do this if verbose
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
 					   hostname,
 					   "",
@@ -54,6 +54,7 @@ int main(int argc, char ** argv){
   }
   
   uint8_t deviceAddr = 0x02;
+			    
   uint8_t channel_number = 0;
   uint8_t lun = 0;
   uint8_t net_fn = 0xa; // 0xa is net fn for storage
@@ -107,18 +108,20 @@ int main(int argc, char ** argv){
       //}
 
 
-
     } catch(std::runtime_error &e) {
 
     }
     if (deviceAddr == 0xfe){
       break;
     }
+    
     fru_id = 0;
     buf_rq[1] = fru_id;
     deviceAddr += 2;
+    
   }
   
+  ipmi_ctx_close(ipmiContext_);
   
   //}
   return 0;

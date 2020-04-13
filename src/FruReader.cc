@@ -21,7 +21,7 @@ void FruReader::PrintFruInfo(bool verbose){
     printf("0x%02x(%d)", deviceAccessAddress, fru_id);
     if(productName != ""){
       printf(" : %*s", 10, productName.c_str());
-    } //else {printf(" : N/A"); }
+    } 
     if(productSerial != ""){
       printf(" : %*s", 10, productSerial.c_str());
     } else {printf(" : N/A"); }
@@ -60,7 +60,7 @@ void FruReader::Read(){
   //  uint8_t fru_id = 0;
   uint8_t starting_byte_ls = 0;
   uint8_t starting_byte_ms = 0;
-  uint8_t num_bytes_to_read = 16;
+  uint8_t num_bytes_to_read = 8;
 
   buf_rq[0] = read_code;
   buf_rq[1] = fru_id;
@@ -71,6 +71,7 @@ void FruReader::Read(){
   const size_t buf_rs_size = 256;
   uint8_t buf_rs[buf_rs_size];
 
+
   /* use this command to get header information */
   int raw_result_header = ipmi_cmd_raw_ipmb(ipmiContext_,
                                      channel_number,
@@ -80,16 +81,22 @@ void FruReader::Read(){
                                      (void const *) buf_rq, buf_rq_size,
                                      buf_rs, buf_rs_size);
 
+  
   if (raw_result_header < 0){
     ipmi_ctx_close(ipmiContext_);
     throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));  
   }
+
 
   for(int i = 3; i < 3+num_bytes_to_read;i++){
     header.push_back(buf_rs[i]);
   }
 
   ReadHeader();
+
+  // max we can read is 22
+  num_bytes_to_read = 22;
+  buf_rq[4] = num_bytes_to_read;
 
   int bytes_read = 0;
   while (bytes_read < total_bytes_used){    
@@ -101,9 +108,8 @@ void FruReader::Read(){
 				       net_fn,
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
-
+    
     if (raw_result < 0){
-      printf("H\n");
       throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
     }
     
@@ -113,7 +119,7 @@ void FruReader::Read(){
     }
 
 
-    if(starting_byte_ls == 248){
+    if((starting_byte_ls + num_bytes_to_read) > 255 ){
       starting_byte_ms++;
       buf_rq[3] = starting_byte_ms;
     }
@@ -135,11 +141,11 @@ void FruReader::Read(){
   if(chassisInfoStartingOffset){
     ReadChassisInfo();
   }
-  
+
   if(boardStartingOffset){
     ReadBoardArea();
   }
-  
+
   if(productInfoStartingOffset){
     ReadProductInfo();
   }
@@ -183,7 +189,6 @@ int FruReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 				     (void const *) buf_rq, buf_rq_size,
 			             buf_rs, buf_rs_size);
   } catch(std::runtime_error &e){
-    printf("FAILE\n");
     std::cerr << e.what() << '\n';
   }
   //  if (raw_result < 0){
@@ -414,6 +419,7 @@ void FruReader::ReadProductInfo(){
     last_field_reached = true;
     printf("PRODUCT NAME IS END OF FIELDS\n");
   }
+  //  printf("PRODUCT NAME IS: %s\n", productName.c_str());
   // END PRODUCT NAME
 
   // PRODUCT PART NUMBER
@@ -462,6 +468,7 @@ void FruReader::ReadProductInfo(){
     last_field_reached = true;
     printf("PRODUCT SERIAL IS END OF FIELDS\n");
   }
+  //  printf("PRODUCT SERIAL IS: %s\n", productSerial.c_str());
   // END PRODUCT SERIAL
 
   // ASSSET TAG
