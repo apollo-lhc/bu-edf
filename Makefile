@@ -1,10 +1,11 @@
 CXX=g++
 
 APOLLO_PATH?=/opt/BUTool/
+CACTUS_PATH?=/opt/cactus/
 
-CXXFLAGS=-Iinclude -std=c++11 -I$(APOLLO_PATH)/include -I/opt/cactus/include
+CXXFLAGS=-Iinclude -std=c++11 -I$(APOLLO_PATH)/include -I$(CACTUS_PATH)include
 
-LD_FLAGS=-L$(APOLLO_PATH)/lib -lboost_program_options -lboost_system -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO
+LD_FLAGS=-lfreeipmi -lboost_program_options -lboost_system
 
 SRC=src
 BUILD=build
@@ -20,10 +21,10 @@ APOLLO_MONITOR_SRC=$(wildcard $(SRC)/ApolloMonitor/*.cc)
 APOLLO_MONITOR_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(APOLLO_MONITOR_SRC))
 
 SHELF_MONITOR_OBJ=$(BUILD)/shelf_monitor.o $(BASE_OBJ) $(ATCA_OBJ) $(APOLLO_MONITOR_OBJ)
-SHELF_MONITOR_LIB=-lfreeipmi 
+SHELF_MONITOR_LIB=-L$(APOLLO_PATH)/lib  -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO
 
 SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ) 
-SHELF_SCAN_LIB=-lfreeipmi 
+SHELF_SCAN_LIB=
 
 .PHONEY: all clean distclean
 
