@@ -1,17 +1,11 @@
 #include <iostream>
 #include <base/net_helpers.hh>
 #include <base/SensorFactory.hh>
-//#include <base/Sensor.hh>
-//#include <atca/IPMITempSensor.hh>
-//#include <atca/IPMIFanSpeedSensor.hh>
-//#include <atca/ApolloBlade.hh>
 #include <unistd.h>
 #include <string>
 #include <fstream>
 #include <boost/program_options.hpp>
 #include <stdexcept>
-
-//#include <ApolloMonitor/ApolloMonitor.hh>
 
 namespace po = boost::program_options;
 
@@ -23,9 +17,6 @@ int main(int argc, char ** argv){
 
   std::string const &IP_addr = "192.168.10.20";//"127.0.0.1";
   int port_number = 2003; // plaintext data port
-
-
-
 
   // create map that we'll put sensors in
   std::vector<Sensor*> sensors;
@@ -133,25 +124,4 @@ std::vector<std::string> split_sensor_string(std::string sensor, std::string con
   sensor_info.push_back(sensor);
 
   return sensor_info;
-//  size_t last,current;
-//  last = current = 0;
-//  std::vector<std::string> sensor_info;
-//  for(;last != std::string::npos;){
-//    current = sensor.find(delimiter.c_str(),last);
-//    if(std::string::npos != current){      
-//      if(current != (last +1)){
-//	sensor_info.push_back(sensor.substr(last,current));      
-//      }else{
-//	//ignore any one space strings
-//      }
-//      last = current+1;
-//    }else{
-//      //catch white space at the end. 
-//      if(last < (sensor.size()-1)){
-//	sensor_info.push_back(sensor.substr(last));
-//      }
-//      last = current;      
-//    }
-//  }
-//  return sensor_info;
 }
