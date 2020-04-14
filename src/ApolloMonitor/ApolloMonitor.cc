@@ -35,11 +35,18 @@ float ApolloMonitor::GetVal(){
   return 0.0;
 }
 
-ApolloMonitor::ApolloMonitor(char *hostname_, std::string connectionFile){
-  base = "Apollo06";  
-  hostname = hostname_;
+ApolloMonitor::ApolloMonitor(std::string const & connectionFile,
+			     std::string const & userBase, 
+			     std::string const & table, 
+			     int level=1){
   SM = new ApolloSM();
   std::vector<std::string> arg;
   arg.push_back(connectionFile);
   SM->Connect(arg);
+  //Get
+  std::stringstream ss;
+  ss << userBase ;
+//     << "Apollo" 
+//     << SM->Read("SLAVE_I2C.S8.IPMC_IP.BYTE_3");  //please fix me! (OK @ BU)
+  base = ss.str();
 }

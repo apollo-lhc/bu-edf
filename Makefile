@@ -1,8 +1,10 @@
 CXX=g++
 
-CXXFLAGS=-Iinclude -std=c++11 -I/opt/BUTool/include -I/opt/cactus/include
+APOLLO_PATH?=/opt/BUTool/
 
-LD_FLAGS=-L/opt/BUTool/lib -lboost_program_options -lboost_system -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO
+CXXFLAGS=-Iinclude -std=c++11 -I$(APOLLO_PATH)/include -I/opt/cactus/include
+
+LD_FLAGS=-L$(APOLLO_PATH)/lib -lboost_program_options -lboost_system -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO
 
 SRC=src
 BUILD=build
@@ -29,7 +31,7 @@ all: $(BIN)/shelf_monitor $(BIN)/shelf_scan
 
 $(BIN)/shelf_monitor: $(SHELF_MONITOR_OBJ)
 	mkdir -p $(dir $@)
-	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_MONITOR_LIB) -Wl,-rpath=/opt/BUTool/lib
+	$(CXX) -o $@ $^ $(LD_FLAGS) $(SHELF_MONITOR_LIB) -Wl,-rpath=$(APOLLO_PATH)/lib
 
 $(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
 	mkdir -p $(dir $@)

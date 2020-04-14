@@ -4,13 +4,14 @@
 class ApolloMonitor : public Sensor {
 
 public:
-  ApolloMonitor(char *hostname_, std::string connectionFile);
+  ApolloMonitor(std::string const & connectionFile,
+		std::string const & userBase,
+		std::string const & tableName,
+		int level);
   virtual int Report();
   virtual float GetVal();
 private:
   void SetSensors();
   std::string base;
-  std::string hostname;
   ApolloSM * SM;
-  std::string ApolloID;
 };
