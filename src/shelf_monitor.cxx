@@ -15,7 +15,7 @@
 namespace po = boost::program_options;
 
 
-std::vector<std::string> split_sensor_string(std::string sensor, std::string delimiter);
+std::vector<std::string> split_sensor_string(std::string sensor, std::string const & delimiter);
 
 int main(int argc, char ** argv){
 
@@ -24,7 +24,6 @@ int main(int argc, char ** argv){
 
   // create map that we'll put sensors in
   std::vector<Sensor*> sensors;
-  fprintf(stderr,"asdfasdfasdf\n");
   try {
     po::options_description fileOptions{"File"};
 
@@ -102,15 +101,17 @@ int main(int argc, char ** argv){
 	}
 	else if(option == "am") {
 	  std::vector<std::string> apolloInfo;
-	  apolloInfo = split_sensor_string(config_options.options[i].value[0].c_str()," ");
+	  printf("%s\n",config_options.options[i].value[0].c_str());
+	  apolloInfo = split_sensor_string(config_options.options[i].value[0],delimiter);
 	  if(apolloInfo.size() < 4){
 	    break;
 	  }
-
-	  int level = atoi(apollo_info[3]);
-	  Sensor *apolloBlade = new ApolloMonitor(apollo_info[0],
-						  apollo_info[1],
-						  apollo_info[2],
+	  
+	  printf("%s %s %s %s\n",apolloInfo[0].c_str(),apolloInfo[1].c_str(),apolloInfo[2].c_str(),apolloInfo[3].c_str());
+	  int level = atoi(apolloInfo[3].c_str());
+	  Sensor *apolloBlade = new ApolloMonitor(apolloInfo[0],
+						  apolloInfo[1],
+						  apolloInfo[2],
 						  level);
 	  sensors.push_back(apolloBlade);
 	  apolloBlade->Connect(IP_addr, port_number);
@@ -185,26 +186,38 @@ int main(int argc, char ** argv){
 }
 
 
-std::vector<std::string> split_sensor_string(std::string const & sensor, std::string const & delimiter){
+std::vector<std::string> split_sensor_string(std::string sensor, std::string const & delimiter){
   
-  size_t last,current;
-  last = current = 0;
+  size_t position = 0;
+  std::string token;
   std::vector<std::string> sensor_info;
-  for(;last != std::string::npos;){
-    current = sensor.find(" ",last);
-    if(std::string::npos != current){      
-      if(current != (last +1)){
-	sensor_info.push_back(sensor.substr(last,current));      
-      }else{
-	//ignore any one space strings
-      }
-    }else{
-      //catch white space at the end. 
-      if(last < (sensor.size()-1)){
-	sensor_info.push_back(sensor.substr(last));
-      }
-    }
-    last = current+1;
+  while( (position = sensor.find(delimiter)) != std::string::npos) {
+    token = sensor.substr(0, position);
+    sensor_info.push_back(token);
+    sensor.erase(0, position+delimiter.length());
   }
+  sensor_info.push_back(sensor);
+
   return sensor_info;
+//  size_t last,current;
+//  last = current = 0;
+//  std::vector<std::string> sensor_info;
+//  for(;last != std::string::npos;){
+//    current = sensor.find(delimiter.c_str(),last);
+//    if(std::string::npos != current){      
+//      if(current != (last +1)){
+//	sensor_info.push_back(sensor.substr(last,current));      
+//      }else{
+//	//ignore any one space strings
+//      }
+//      last = current+1;
+//    }else{
+//      //catch white space at the end. 
+//      if(last < (sensor.size()-1)){
+//	sensor_info.push_back(sensor.substr(last));
+//      }
+//      last = current;      
+//    }
+//  }
+//  return sensor_info;
 }

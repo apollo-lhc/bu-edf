@@ -5,8 +5,8 @@
 
 int ApolloMonitor::Report() {
   try{
-    std::string sensorVals = SM->GenerateGraphiteStatus(3,"CM_MON");
-
+    std::string sensorVals = SM->GenerateGraphiteStatus(level,table);
+    
     for(size_t iS = 0;
 	iS < sensorVals.size();
 	){
@@ -37,8 +37,10 @@ float ApolloMonitor::GetVal(){
 
 ApolloMonitor::ApolloMonitor(std::string const & connectionFile,
 			     std::string const & userBase, 
-			     std::string const & table, 
-			     int level=1){
+			     std::string const & tableName, 
+			     int displayLevel=1){
+  level = displayLevel;
+  table=tableName;
   SM = new ApolloSM();
   std::vector<std::string> arg;
   arg.push_back(connectionFile);

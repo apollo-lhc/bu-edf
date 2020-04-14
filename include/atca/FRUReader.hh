@@ -11,7 +11,7 @@ public:
 
   FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_);
 
-  void PrintFruInfo(bool verbose);
+  void PrintFRUInfo(bool verbose);
   
   std::vector<uint8_t> GetHeader();
   std::vector<uint8_t> GetData();

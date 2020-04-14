@@ -1,4 +1,5 @@
 #include <atca/FRUReader.hh>
+#include <iostream>
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
@@ -15,7 +16,7 @@ FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
  
 }
 
-void FRUReader::PrintFruInfo(bool verbose){
+void FRUReader::PrintFRUInfo(bool verbose){
   if(!verbose){
     printf("0x%02x(%d)", deviceAccessAddress, fru_id);
     if(productName != ""){
