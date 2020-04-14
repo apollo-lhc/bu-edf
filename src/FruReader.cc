@@ -7,16 +7,17 @@
 #include <string.h>
 #include <string>
 
-FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
+FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
   fru_id = fru_id_;
+  verbose = verbose_option;
   Read();
  
 }
 
-void FruReader::PrintFruInfo(bool verbose){
+void FruReader::PrintFruInfo(){
   if(!verbose){
     printf("0x%02x(%d)", deviceAccessAddress, fru_id);
     if(productName != ""){
@@ -94,9 +95,43 @@ void FruReader::Read(){
 
   ReadHeader();
 
-  // max we can read is 22
-  num_bytes_to_read = 22;
-  buf_rq[4] = num_bytes_to_read;
+  // if not verbose option, we only want to read the product info area
+ 
+  
+
+  if(verbose){
+    total_bytes_used = informationLength;
+    // max we can read is 22
+    num_bytes_to_read = 22;
+    buf_rq[4] = num_bytes_to_read;
+  } else {
+
+    starting_byte_ls  = productInfoStartingOffset % 256;
+    starting_byte_ms = (int)productInfoStartingOffset/256;
+    buf_rq[2] = starting_byte_ls;
+    buf_rq[3] = starting_byte_ms;
+
+    // read 2 bytes, the 2nd byte (index 1) times 8 is the length of the product info
+    num_bytes_to_read = 2;
+    buf_rq[4] = num_bytes_to_read;
+    
+    // if not verbose, get the data that encodes the length of the product information
+    int raw_product_info_result = ipmi_cmd_raw_ipmb(ipmiContext_,
+				       channel_number,
+				       deviceAccessAddress,
+				       lun,
+				       net_fn,
+				       (void const *) buf_rq, buf_rq_size,
+				       buf_rs, buf_rs_size);
+    
+    if (raw_product_info_result < 0){
+      throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
+    }
+
+    printf("len product info: %d\n",buf_rs[3]*8);
+  }
+  
+
 
   int bytes_read = 0;
   while (bytes_read < total_bytes_used){    
@@ -142,7 +177,7 @@ void FruReader::Read(){
     ReadChassisInfo();
   }
 
-  if(boardStartingOffset){
+  if(boardStartingOffset && verbose){
     ReadBoardArea();
   }
 
@@ -212,7 +247,6 @@ void FruReader::ReadHeader(){
   multiRecordStartingOffset = header[5]*8;
   pad = header[6];
   commonHeaderChecksum = header[7];
-  total_bytes_used = informationLength;
 }
 
 
