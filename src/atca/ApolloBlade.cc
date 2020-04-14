@@ -1,90 +1,78 @@
 #include <atca/ApolloBlade.hh>
-#include <atca/IPMITempSensor.hh>
-#include <freeipmi/api/ipmi-api.h>
-#include <freeipmi/spec/ipmi-authentication-type-spec.h>
-#include <freeipmi/spec/ipmi-privilege-level-spec.h>
-#include <stdexcept>
+//#include <atca/IPMITempSensor.hh>
+//#include <freeipmi/api/ipmi-api.h>
+//#include <freeipmi/spec/ipmi-authentication-type-spec.h>
+//#include <freeipmi/spec/ipmi-privilege-level-spec.h>
+//#include <stdexcept>
 
 
-ApolloBlade::ApolloBlade(int moduleNum, std::string dbBase, char *hostname_, uint8_t deviceAddr){
-  SetModuleNumber(moduleNum);
-  SetDatabaseBaseString(dbBase);
-  SetHostname(hostname_);
-  SetDeviceAccessAddress(deviceAddr);
-  
+ApolloBlade::ApolloBlade(std::vector<std::string> const & arg){
+  /*
+   [0] moduleNum
+   [1] dbBase
+   [2] hostname
+   [3] deviceAddr
+  */
+
+  SetModuleNumber(arg[0]);
+  SetDatabaseBaseString(arg[1]);
+  SetHostname(arg[2]);
+  SetDeviceAccessAddress(arg[3]);  
   SetSensors();
 }
 
-void ApolloBlade::SetModuleNumber(int moduleNum){
-  moduleNumber = moduleNum;
+void ApolloBlade::SetModuleNumber(std::string const & val){
+  //check for valid number
+  moduleNumber = val;
 }
 
-void ApolloBlade::SetDatabaseBaseString(std::string dbBase){
-  databaseBase = dbBase;
+void ApolloBlade::SetDatabaseBaseString(std::string const & val){
+  databaseBase = val;
 }
 
-void ApolloBlade::SetHostname(char *hostname_){
-  hostname = hostname_;
+void ApolloBlade::SetHostname(std::string const & val){
+  hostname = val;
 }
 
-void ApolloBlade::SetDeviceAccessAddress(uint8_t deviceAddr){
-  deviceAccessAddress = deviceAddr;
+void ApolloBlade::SetDeviceAccessAddress(std::string const & val){
+  //check for valid number
+  deviceAccessAddress = val;
 }
 
 
 void ApolloBlade::SetSensors(){
 
-  Sensor *internal = new IPMITempSensor(3, databaseBase + "InternalTemp", hostname, deviceAccessAddress);
-  if (internal != NULL){
-    apolloSensors.push_back(internal);
-  }
-  Sensor *U34 = new IPMITempSensor(4, databaseBase + "Top", hostname, deviceAccessAddress);
-  if (U34 != NULL){
-    apolloSensors.push_back(U34);
-  }
-  Sensor *U35 = new IPMITempSensor(5, databaseBase +  "Bottom", hostname, deviceAccessAddress);
-  if(U35 != NULL){
-    apolloSensors.push_back(U35);
-  }
-  Sensor *U36 = new IPMITempSensor(6, databaseBase + "Middle", hostname, deviceAccessAddress);
-  if(U36 != NULL){
-    apolloSensors.push_back(U36);
-  }
-  Sensor *CMmicroController = new IPMITempSensor(7, databaseBase + "CommandModuleMicroController", hostname, deviceAccessAddress);
-  if(CMmicroController != NULL){
-    apolloSensors.push_back(CMmicroController);
-  }
-  Sensor *FF = new IPMITempSensor(8, databaseBase + "Firefly", hostname, deviceAccessAddress);
-  if(CMmicroController != NULL){
-    apolloSensors.push_back(FF);
-  }
-  Sensor *CMfpga = new IPMITempSensor(9, databaseBase + "CommandModuleFPGA", hostname, deviceAccessAddress);
-  if(CMfpga != NULL){
-    apolloSensors.push_back(CMfpga);
-  }
-  Sensor *CMregulator = new IPMITempSensor(10, databaseBase + "CommandModuleRegulator", hostname, deviceAccessAddress);
-  if(CMfpga != NULL){
-    apolloSensors.push_back(CMfpga);
-  }
-  Sensor *CMmcu = new IPMITempSensor(11, databaseBase + "CommandModuleMCU", hostname, deviceAccessAddress);
-  if(CMmcu != NULL){
-    apolloSensors.push_back(CMmcu);
-  }
-  Sensor *CMfpgaVU = new IPMITempSensor(12, databaseBase + "CommandModuleFPGAVU", hostname, deviceAccessAddress);
-  if(CMfpgaVU != NULL){
-    apolloSensors.push_back(CMfpgaVU);
-  }
-  Sensor *CMfpgaKU = new IPMITempSensor(13, databaseBase + "CommandModuleFPGAKU", hostname, deviceAccessAddress);
-  if(CMfpgaKU != NULL){
-    apolloSensors.push_back(CMfpgaKU);
-  }
-  Sensor *FF2 = new IPMITempSensor(14, databaseBase + "Firefly2", hostname, deviceAccessAddress);
-  if(FF2 != NULL){
-    apolloSensors.push_back(FF2);
-  }
-  Sensor *CMregulator2 = new IPMITempSensor(15, databaseBase + "CommandModuleRegulator2", hostname, deviceAccessAddress);
-  if(CMregulator2 != NULL){
-    apolloSensors.push_back(CMregulator2);
+  //build a vector of arguments
+  std::vector<std::string> args(5,"");
+  args[0] = "";
+  args[1] = databaseBase + ".Apollo" + moduleNumber;
+  args[2] = "";
+  args[3] = hostname;
+  args[4] = deviceAccessAddress;
+
+  std::vector<std::pair<std::string,std::string> > sensorNames;
+  sensorNames.push_back(std::pair<std::string,std::string>("3",  "InternalTemp"));
+  sensorNames.push_back(std::pair<std::string,std::string>("4",  "Top"));
+  sensorNames.push_back(std::pair<std::string,std::string>("5",  "Bottom"));
+  sensorNames.push_back(std::pair<std::string,std::string>("6",  "Middle"));
+  sensorNames.push_back(std::pair<std::string,std::string>("7",  "CommandModuleMicroController"));
+  sensorNames.push_back(std::pair<std::string,std::string>("8",  "Firefly"));
+  sensorNames.push_back(std::pair<std::string,std::string>("9",  "CommandModuleFPGA"));
+  sensorNames.push_back(std::pair<std::string,std::string>("10", "CommandModuleRegulator"));
+  sensorNames.push_back(std::pair<std::string,std::string>("11", "CommandModuleMCU"));
+  sensorNames.push_back(std::pair<std::string,std::string>("12", "CommandModuleFPGAVU"));
+  sensorNames.push_back(std::pair<std::string,std::string>("13", "CommandModuleFPGAKU"));
+  sensorNames.push_back(std::pair<std::string,std::string>("14", "Firefly2"));
+  sensorNames.push_back(std::pair<std::string,std::string>("15", "CommandModuleRegulator2"));
+
+  for(size_t iSensor; iSensor < sensorNames.size();iSensor++){
+    args[0] = sensorNames[iSensor].second;
+    args[2] = sensorNames[iSensor].first;
+
+    Sensor * sensor = SensorFactory::Instance()->Create("IPMITemp",args);
+    if(NULL != sensor){
+      apolloSensors.push_back(sensor);
+    }
   }
 }
 

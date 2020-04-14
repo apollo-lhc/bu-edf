@@ -1,26 +1,28 @@
+#ifndef __IPMI_TEMP_SENSOR_HH__
+#define __IPMI_TEMP_SENSOR_HH__
+#include <base/SensorFactory.hh>
 #include <base/Sensor.hh>
 
 class IPMITempSensor : public Sensor {
 
 public:
-  IPMITempSensor(int sensorNum, std::string dbName,  char *hostname_,  uint8_t deviceAddr);
+  IPMITempSensor(std::vector<std::string> const &);
 
-  void SetSensorNumber(int sensorNum);
-
-  void SetHostname(char *hostname_);
-
-  void SetDeviceAccessAddress(uint8_t deviceAddr);
-
-  //  virtual int Connect(std::string const &IP_addr, int port_number);
-
-  //virtual int Report();
   
   virtual float GetVal();
 
 private:
+  void SetSensorNumber(std::string const &);
+  void SetHostname(std::string const &);
+  void SetDeviceAccessAddress(std::string const &);
+
   int sensorNumber;
 
-  char *hostname;
+  std::string hostname;
 
   uint8_t deviceAccessAddress;
 };
+
+//register the sensor
+RegisterSensor(IPMITempSensor,"IPMITemp")
+#endif

@@ -10,23 +10,40 @@
 #include <string.h>
 #include <atca/IPMBSensorResult.hh>
 
-IPMITempSensor::IPMITempSensor(int sensorNum, std::string dbName, char *hostname_, uint8_t deviceAddr){
-  SetDatabaseName(dbName);
-  SetSensorNumber(sensorNum);
-  SetHostname(hostname_);
-  SetDeviceAccessAddress(deviceAddr);
+IPMITempSensor::IPMITempSensor(std::vector<std::string> const & args){
+  /*
+    args:
+      sensor name
+      base
+      sensorNum
+      hostname
+      deviceAddr
+  */
+  if(args.size() < 5){
+    throw std::runtime_error("Too few arguments");
+  }  
+  SetDatabaseName(args[1] + "IpmiTemperature" + "." + args[0]);
+  SetSensorNumber(args[2]);   
+  // get the hostname of the machine where the sensor is located
+  SetHostname(args[3]);
+
+  // get the IPMB address of the device within the machine
+  SetDeviceAccessAddress(args[4]);
+  SetHostname(args[2]);
 }
 
-void IPMITempSensor::SetSensorNumber(int sensorNum) {
-  sensorNumber = sensorNum;
+void IPMITempSensor::SetSensorNumber(std::string const & val){
+  //check if val is a digit
+  sensorNumber = atoi(val.c_str());
 }
 
-void IPMITempSensor::SetHostname(char *hostname_){
-  hostname = hostname_;
+void IPMITempSensor::SetHostname(std::string const & val){
+  hostname = val;
 }
 
-void IPMITempSensor::SetDeviceAccessAddress(uint8_t deviceAddr){
-  deviceAccessAddress = deviceAddr;
+void IPMITempSensor::SetDeviceAccessAddress(std::string const & val){
+  //check if val is a digit
+  deviceAccessAddress = strtoul((char const *) val.c_str(), NULL, 0);
 }
 
 
@@ -37,7 +54,7 @@ float IPMITempSensor::GetVal(){
 
 
   int connection = ipmi_ctx_open_outofband(ipmiContext,
-					   hostname,
+					   hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,

@@ -1,13 +1,11 @@
+#include <base/SensorFactory.hh>
 #include <base/Sensor.hh>
 #include <ApolloSM/ApolloSM.hh>
 
 class ApolloMonitor : public Sensor {
 
 public:
-  ApolloMonitor(std::string const & connectionFile,
-		std::string const & userBase,
-		std::string const & tableName,
-		int displayLevel);
+  ApolloMonitor(std::vector<std::string> const & args);
   virtual int Report();
   virtual float GetVal();
 private:
@@ -17,3 +15,5 @@ private:
   int level;
   std::string table;
 };
+
+RegisterSensor(ApolloMonitor,"ApolloMonitor")

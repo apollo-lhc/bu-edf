@@ -1,22 +1,29 @@
+#ifndef __IPMI_FAN_SPEED_SENSOR_HH__
+#define __IPMI_FAN_SPEED_SENSOR_HH__
+
+#include <base/SensorFactory.hh>
 #include <base/Sensor.hh>
 
 class IPMIFanSpeedSensor : public Sensor {
 
 public:
-  IPMIFanSpeedSensor(int sensorNum, std::string dbName, char *hostname, uint8_t deviceAddr);
-
-  void SetSensorNumber(int sensorNum);
-
-  void SetHostname(char *hostname_);
-
-  void SetDeviceAccessAddress(uint8_t deviceAddr);
+  IPMIFanSpeedSensor(std::vector<std::string> const &);
 
   virtual float GetVal();
 
 private:
+  void SetSensorNumber(std::string const &);
+  void SetHostname(std::string const &);
+  void SetDeviceAccessAddress(std::string const &);
+
   int sensorNumber;
 
-  char *hostname;
+  std::string hostname;
 
   uint8_t deviceAccessAddress;
 };
+
+//register the sensor
+RegisterSensor(IPMIFanSpeedSensor,"IPMIFanSpeed")
+
+#endif

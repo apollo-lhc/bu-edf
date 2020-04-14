@@ -2,22 +2,24 @@
 #define __SENSOR_FACTORY_H__
 
 #include <base/Sensor.hh>
+#include <vector>
+#include <string>
+#include <map>
 
-#define RegisterSensor(ClassName,ClassNickName)				\
-  namespace {								\
-    /*make creator function*/						\
-    Sensor * creator_function(std::vector<std::string> args){		\
-      return new ClassName(args);					\
-    }									\
-    /*Register the device with the DeviceFactory*/			\
-    const char type[] = #ClassName;					\
-    const char name[] = ClassNickName;					\
-    const bool registered = SensorFactory::Instance()->Register(type,	\
-								name,	\
+#define RegisterSensor(ClassName,ClassNickName)				            \
+  namespace {								            \
+    /*make creator function*/						            \
+    Sensor * creator_function(std::vector<std::string> args){		            \
+      return new ClassName(args);					            \
+    }									            \
+    /*Register the device with the DeviceFactory*/			            \
+    const char type[] = #ClassName;					            \
+    const char name[] = ClassNickName;					            \
+    const bool registered = SensorFactory::Instance()->Register(type,	            \
+								name,	            \
 								&creator_function); \
-    }
+  }
 
-#endif
 
 class SensorFactory{
 public:
@@ -51,3 +53,5 @@ private:
   };
   std::map<std::string,sSensor> sensorMap;
 };
+
+#endif

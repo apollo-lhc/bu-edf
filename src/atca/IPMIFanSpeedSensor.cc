@@ -8,30 +8,47 @@
 #include <atca/IPMBSensorResult.hh>
 #include <string.h>
 
-IPMIFanSpeedSensor::IPMIFanSpeedSensor(int sensorNum, std::string dbName, char *hostname_, uint8_t deviceAddr){
-  SetDatabaseName(dbName);
-  SetSensorNumber(sensorNum);
-  SetHostname(hostname_);
-  SetDeviceAccessAddress(deviceAddr);
+IPMIFanSpeedSensor::IPMIFanSpeedSensor(std::vector<std::string> const & args){
+  /*
+    args:
+      sensor name
+      base
+      sensorNum
+      hostname
+      deviceAddr
+  */
+  if(args.size() < 5){
+    throw std::runtime_error("Too few arguments");
+  }  
+  SetDatabaseName(args[1] + "IpmiFanSpeedSensor" + "." + args[0]);
+  SetSensorNumber(args[2]);   
+  // get the hostname of the machine where the sensor is located
+  SetHostname(args[3]);
+
+  // get the IPMB address of the device within the machine
+  SetDeviceAccessAddress(args[4]);
+  SetHostname(args[2]);
 }
 
-void IPMIFanSpeedSensor::SetSensorNumber(int sensorNum){
-  sensorNumber = sensorNum;
+void IPMIFanSpeedSensor::SetSensorNumber(std::string const & val){
+  //check if val is a digit
+  sensorNumber = atoi(val.c_str());
 }
 
-void IPMIFanSpeedSensor::SetHostname(char *hostname_){
-  hostname = hostname_;
+void IPMIFanSpeedSensor::SetHostname(std::string const & val){
+  hostname = val;
 }
 
-void IPMIFanSpeedSensor::SetDeviceAccessAddress(uint8_t deviceAddr){
-  deviceAccessAddress = deviceAddr;
+void IPMIFanSpeedSensor::SetDeviceAccessAddress(std::string const & val){
+  //check if val is a digit
+  deviceAccessAddress = strtoul((char const *) val.c_str(), NULL, 0);
 }
 
 float IPMIFanSpeedSensor::GetVal(){
   ipmi_ctx_t ipmiContext = ipmi_ctx_create();
 
   int connection = ipmi_ctx_open_outofband(ipmiContext,
-					   hostname,
+					   hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,

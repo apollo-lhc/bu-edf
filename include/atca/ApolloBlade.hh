@@ -1,19 +1,15 @@
+#ifndef __APOLLO_BLADE_HH__
+#define __APOLLO_BLADE_HH__
+#include <base/SensorFactory.hh>
 #include <base/Sensor.hh>
 #include <vector>
+#include <string>
 
 class ApolloBlade : public Sensor {
 
 public:
 
-  ApolloBlade(int moduleNum, std::string dbBase, char *hostname_, uint8_t deviceAddr);
-
-  void SetModuleNumber(int moduleNum);
-
-  void SetDatabaseBaseString(std::string dbBase);
-  
-  void SetHostname(char *hostname_);
-
-  void SetDeviceAccessAddress(uint8_t deviceAddr);
+  ApolloBlade(std::vector<std::string> const &);
 
   virtual int Connect(std::string const &IP_addr, int port_number);
   
@@ -22,15 +18,27 @@ public:
   virtual float GetVal();
 private:
 
+  void SetModuleNumber(std::string const &);
+
+  void SetDatabaseBaseString(std::string const &);
+  
+  void SetHostname(std::string const &);
+
+  void SetDeviceAccessAddress(std::string const &);
+
   void SetSensors();
 
-  int moduleNumber;
+  std::string moduleNumber;
 
   std::string databaseBase;
 
-  char *hostname;
+  std::string hostname;
 
-  uint8_t deviceAccessAddress;
+  std::string deviceAccessAddress;
   
   std::vector<Sensor *> apolloSensors;
 };
+
+//register the sensor
+RegisterSensor(ApolloBlade,"ApolloBlade")
+#endif
