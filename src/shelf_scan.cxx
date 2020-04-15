@@ -99,8 +99,9 @@ int main(int argc, char ** argv){
 	if(num_zeros == 3){
 	  break;
 	}
-
-	apolloReader->PrintFruInfo();
+	if(apolloReader->GetHeader()[0]){
+	  apolloReader->PrintFruInfo();
+	}
 	fru_id++;
 	buf_rq[1] = fru_id;
       }
