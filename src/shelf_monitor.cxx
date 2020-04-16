@@ -15,7 +15,7 @@ std::vector<std::string> split_sensor_string(std::string sensor, std::string con
 
 int main(int argc, char ** argv){
 
-  std::string const &IP_addr = "192.168.10.20";//"127.0.0.1";
+  std::string IP_addr("192.168.10.20");//"127.0.0.1";
   int port_number = 2003; // plaintext data port
 
   // create map that we'll put sensors in
@@ -55,6 +55,7 @@ int main(int argc, char ** argv){
 	    try {
 	      Sensor * newSensor = DevFac->Create(type,sensorInfo);
 	      if(newSensor){
+		newSensor->Connect(IP_addr, port_number);
 		sensors.push_back(newSensor);
 	      }
 	    } catch (std::exception &e){
@@ -79,7 +80,7 @@ int main(int argc, char ** argv){
   int attempts_timer = 0;
   // sleep and repeat this process
   while(1){
-    for ( int i = 0; i < sensors.size(); i++ ) {
+    for (size_t i = 0; i < sensors.size(); i++ ) {
       attempts++;
       try{
 	sensors[i]->Report();

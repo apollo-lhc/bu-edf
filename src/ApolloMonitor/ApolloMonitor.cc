@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 int ApolloMonitor::Report() {
+  int sensorCount = 0;
   try{
     std::string sensorVals = SM->GenerateGraphiteStatus(level,table);
     
@@ -23,6 +24,7 @@ int ApolloMonitor::Report() {
       writen(sockfd, ".", 1);
       //write the rest of the value
       writen(sockfd,sensorVals.c_str() + iS,end - iS);
+      sensorCount++;
       iS = end;
     }	
   }catch(BUException::exBase const & e){
@@ -30,6 +32,7 @@ int ApolloMonitor::Report() {
   }catch(std::exception const & e){
     //syslog(LOG_ERR,"Caught std::exception: %s\n",e.what());          
   }
+  return sensorCount;
 }
 
 float ApolloMonitor::GetVal(){

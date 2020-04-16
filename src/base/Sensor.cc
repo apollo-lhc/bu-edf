@@ -88,7 +88,7 @@ int Sensor::Report(){
   memset(stringToWrite, 0, stringToWriteLen+1);
 
   /* make into one string */ /* make this database string*/
-  snprintf(stringToWrite, stringToWriteLen, "%s %f %d\n", databaseName.c_str(), value, time_now);
+  snprintf(stringToWrite, stringToWriteLen, "%s %f %ld\n", databaseName.c_str(), value, time_now);
 
   /* write the result */
   if (writen(sockfd, stringToWrite, strlen(stringToWrite)) < 0) {
