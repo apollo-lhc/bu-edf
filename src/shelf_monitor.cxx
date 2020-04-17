@@ -1,177 +1,168 @@
 #include <iostream>
-#include <net_helpers.hh>
-#include <Sensor.hh>
-#include <TimeSensor.hh>
-#include <IpmiTemperatureSensor.hh>
-#include <IpmiFanSpeedSensor.hh>
-#include <ApolloBlade.hh>
+#include <base/net_helpers.hh>
+#include <base/SensorFactory.hh>
 #include <unistd.h>
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <boost/program_options.hpp>
 #include <stdexcept>
+#include <base/daemon.hh>
+#include <signal.h>
+#include <syslog.h>  
 
 namespace po = boost::program_options;
 
+#define DevFac SensorFactory::Instance()
 
-std::vector<std::string> split_sensor_string(std::string sensor, std::string delimiter);
+std::vector<std::string> split_sensor_string(std::string sensor, std::string const & delimiter);
 
 int main(int argc, char ** argv){
 
-  std::string const &IP_addr = "127.0.0.1";
+  std::string configFile("/etc/graphite_monitor");
+  std::string runPath("/opt/address_tables");
+  std::string pidFile("/var/run/shelf_monitor.pid");
+  boost::program_options::options_description commandLineOptions{"Options"}; // for parsing command line
+  commandLineOptions.add_options()
+    ("config_file", boost::program_options::value<std::string>(),"config file")
+    ("run_path" ,boost::program_options::value<std::string>(), "run path")
+    ("pid_file" ,boost::program_options::value<std::string>(), "pid file");
+  boost::program_options::variables_map commandLineVM; // for parsing command line 
+  try {
+    // parse command line
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, commandLineOptions), commandLineVM);
+  } catch(const boost::program_options::error &ex) {
+    fprintf(stderr, "Caught exception while parsing command line: %s \nTerminating <daemon name here>\n", ex.what());       
+    return -1;
+  }
+ 
+  //check for CLI arguments
+  if(commandLineVM.count("config_file")) {
+    configFile = commandLineVM["config_file"].as<std::string>();
+  }
+  if(commandLineVM.count("run_path")) {
+    runPath = commandLineVM["run_path"].as<std::string>();
+  }
+  if(commandLineVM.count("pid_file")) {
+    pidFile = commandLineVM["pid_file"].as<std::string>();
+  }  
+  
+  
+  Daemon daemon;
+  daemon.daemonizeThisProgram(pidFile, runPath);
+  unsigned int secondsToSleep = 30;
+
+  std::string IP_addr("127.0.0.1");
   int port_number = 2003; // plaintext data port
 
   // create map that we'll put sensors in
   std::vector<Sensor*> sensors;
-
   try {
     po::options_description fileOptions{"File"};
 
     fileOptions.add_options()
       ("sensor", po::value<std::string>(), "value")
-      ("apollo", po::value<std::string>(), "value");
+      ("graphite_server", po::value<std::string>(), "value")
+      ("graphite_port", po::value<std::string>(), "value")
+      ("poll_period", po::value<std::string>(), "value");
 
-    std::string configFileName = "example.config";
-    if(argc > 1){
-      configFileName=argv[1];
-    }
-    std::ifstream ifs{configFileName};
-
-
+    std::ifstream ifs(configFile.c_str());
     if(ifs){
-
       po::parsed_options config_options = po::parse_config_file(ifs, fileOptions);
       int num_options = config_options.options.size();
 
-      // values in config file are space-delimited
-      std::string delimiter = " ";
 
-      for ( int i = 0; i < num_options; i++ ) {
-	std::string option = config_options.options[i].string_key;
+      for ( int iOption = 0; iOption < num_options; iOption++ ) {
+	// values in config file are space-delimited
+	std::string delimiter = " ";
+	std::vector<std::string> sensorInfo;
+	sensorInfo = split_sensor_string(config_options.options[iOption].value[0],delimiter);     
 	
-	if(option == "sensor"){
-	  // vector that we'll split the string into
-	  std::vector<std::string> sensor_info;
-
-	  // each element in config_options.options is a line in the config file
-	  std::string sensor = config_options.options[i].value[0].c_str();
-	  sensor_info = split_sensor_string(sensor, delimiter);
-
-	  // currently sensor_type can be either IpmiTemperature or IpmiFanspeed
-	  std::string sensor_type = sensor_info[0];
-	  std::string fan_tray_number = sensor_info[1];
-
-	  // wsp_filename is the path to the wsp file which grafana reads the data from
-	  std::string wsp_filename = "Sensors." + sensor_type + "." + fan_tray_number;
-	  int ipmi_sensor_number = std::stoi(sensor_info[2]); // this has to be c++ 11, check out atoi
-
-	  // get the hostname of the machine where the sensor is located
-	  char *shelf_hostname = (char *) sensor_info[3].c_str();
-	  // get the IPMB address of the device within the machine
-	  unsigned long rs_addr =  strtoul((char *) sensor_info[4].c_str(), NULL, 0); 
-	  //      	  uint8_t rs_addr = (uint8_t) rs_addr_int;
-      	  try {
-	    printf("Adding Sensor %s:%s Sensor %s(%d) from %s,0x%02X to %s\n",
-		   sensor_type.c_str(),
-		   fan_tray_number.c_str(),
-		   sensor_info[2].c_str(),ipmi_sensor_number,
-		   shelf_hostname,
-		   rs_addr,
-		   wsp_filename.c_str()
-		   );
-	    // make sensor objects. We currently can only make Ipmi Temp or Fanspeed sensors
-	    if (sensor_type == "IpmiTemperature") {
-	      Sensor *tempSensor = new IpmiTemperatureSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
-	      sensors.push_back(tempSensor);
-	      //	      sensors[i]->Connect(IP_addr, port_number);
-	      tempSensor->Connect(IP_addr, port_number);
-	      // made esnsor of type ./..
-	    } else if (sensor_type == "IpmiFanspeed") {
-	      Sensor *fanspeedSensor = new IpmiFanSpeedSensor(ipmi_sensor_number, wsp_filename, shelf_hostname, rs_addr);
-	      sensors.push_back(fanspeedSensor);
-	      //	      sensors[i]->Connect(IP_addr, port_number);
-	      fanspeedSensor->Connect(IP_addr, port_number);
-	    } else {
-	      printf("invalid sensor type: %s\n", sensor_type.c_str());
+	try{
+	  std::string option = config_options.options[iOption].string_key;	
+	  if(option == "sensor"){
+	    // vector that we'll split the string into
+	    std::vector<std::string> sensorInfo;	    
+	    // each element in config_options.options is a line in the config file
+	    sensorInfo = split_sensor_string(config_options.options[iOption].value[0].c_str(), delimiter);
+	    std::string type = sensorInfo[0];
+	    sensorInfo.erase(sensorInfo.begin()); //remove the name
+	      
+	    try {
+	      Sensor * newSensor = DevFac->Create(type,sensorInfo);
+	      if(newSensor){		
+		sensors.push_back(newSensor);
+	      }
+	    } catch (std::exception &e){
+	      syslog(LOG_INFO,"%s",e.what());
 	    }
-	  } catch (std::runtime_error &e){
-	    std::cout << e.what() << std::endl;
+	  }else if(option == "graphite_server"){
+	    IP_addr = config_options.options[iOption].value[0];
+	  }else if(option == "graphite_port"){
+	    port_number = atoi(config_options.options[iOption].value[0].c_str());
+	  }else if (option == "poll_time"){
+	    secondsToSleep = atoi(config_options.options[iOption].value[0].c_str());
 	  }
-	}
-
-
-	else if(option == "apollo") {
-          // vector that we'll split the string into                                                                               
-	  std::vector<std::string> apollo_info;
-	  std::string apollo = config_options.options[i].value[0].c_str();
-	  apollo_info = split_sensor_string(apollo, delimiter);
-	  
-
-	  std::string base_string = "Sensors." + apollo_info[0] + ".";
-	  int ipmi_sensor_number = std::stoi(apollo_info[1]);
-	  char *shelf_hostname = (char *) apollo_info[3].c_str();
-	  unsigned long rs_addr = strtoul((char *) apollo_info[4].c_str(), NULL, 0);
-
-	  printf("Adding Apollo %d %s: %d\n",
-		 ipmi_sensor_number,
-		 shelf_hostname,
-		 rs_addr
-		 );
-
-	  Sensor *apolloBlade = new ApolloBlade(ipmi_sensor_number, base_string, shelf_hostname, rs_addr);
-	  sensors.push_back(apolloBlade);
-	  //	  sensors[i]->Connect(IP_addr, port_number);
-	  apolloBlade->Connect(IP_addr, port_number);
+	}catch (std::exception &e){
+	  syslog(LOG_INFO,"Invalid line: %s",e.what());
 	}
       }
     }
   } catch(const po::error &ex){
-    std::cerr << ex.what() << '\n';
   }
 
+  //Connect to the graphite server
+  for(size_t iSensor = 0; iSensor < sensors.size();iSensor++){
+    sensors[iSensor]->Connect(IP_addr, port_number);
+  }
   
-    unsigned int secondsToSleep = 30;
 
-    
-    int attempts = 0;
-    int successful = 0;
-    int attempts_timer = 0;
-    // sleep and repeat this process
-    while(1){
-      for ( int i = 0; i < sensors.size(); i++ ) {
-	attempts++;
-	try{
-	  sensors[i]->Report();
-	  successful++;
-	}catch(const std::exception & e){
-	}
-	
+
+  // ============================================================================
+  // Signal handling
+  struct sigaction sa_INT,sa_TERM,old_sa;
+  daemon.changeSignal(&sa_INT , &old_sa, SIGINT);
+  daemon.changeSignal(&sa_TERM, NULL   , SIGTERM);
+  daemon.SetLoop(true);
+  
+  
+  int attempts = 0;
+  int successful = 0;
+  int attempts_timer = 0;
+  // sleep and repeat this process
+  while(daemon.GetLoop()){
+    for (size_t i = 0; i < sensors.size(); i++ ) {
+      attempts++;
+      try{
+	sensors[i]->Report();
+	successful++;
+      }catch(const std::exception & e){
       }
-
-      
-      attempts_timer += secondsToSleep;
-      if ( attempts_timer >= 600){
-	printf("%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
-	attempts = 0;
-	successful = 0;
-	attempts_timer = 0;
-      }
-
-      
-      sleep(secondsToSleep);
       
     }
-  
-  /*if (NULL != ipmi_temperature_sensor_1){
-    delete ipmi_temperature_sensor_1;
-    }*/
+    
+    
+    attempts_timer += secondsToSleep;
+    if ( attempts_timer >= 600){
+      syslog(LOG_INFO,"%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
+      attempts = 0;
+      successful = 0;
+      attempts_timer = 0;
+    }
+    
+    
+    sleep(secondsToSleep);
+    
+  }
+
+  // Restore old action of receiving SIGINT (which is to kill program) before returning 
+  sigaction(SIGINT, &old_sa, NULL);
+  syslog(LOG_INFO,"eyescan Daemon ended\n");
 
   return 0;
 }
 
 
-std::vector<std::string> split_sensor_string(std::string sensor, std::string delimiter){
+std::vector<std::string> split_sensor_string(std::string sensor, std::string const & delimiter){
   
   size_t position = 0;
   std::string token;
