@@ -5,7 +5,7 @@ SRC=src
 BUILD=build
 BIN=bin
 LIB=lib
-
+INSTALL_PATH?=./install
 
 CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3
 LD_FLAGS=-lboost_program_options -lboost_system
@@ -62,7 +62,7 @@ SHELF_SCAN_LIB=-lfreeipmi
 #================================================================================
 
 
-.PHONEY: all clean distclean shelf_monitor shelf_scan lib_ApolloMonitor lib_ATCA list
+.PHONEY: all clean distclean shelf_monitor shelf_scan lib_ApolloMonitor lib_ATCA list install
 all: shelf_monitor 
 
 #================================================================================
@@ -80,7 +80,7 @@ $(BIN)/shelf_monitor: $(SHELF_MONITOR_OBJ)
 	@mkdir -p $(dir $@)
 	@echo $(SHELF_MONITOR_OBJ)
 	@echo $(SENSOR_BASE_OBJ)
-	$(CXX) -o $@ $^ $(SHELF_MONITOR_LD_FLAGS) $(SHELF_MONITOR_LIB)
+	$(CXX) -o $@ $^ $(SHELF_MONITOR_LD_FLAGS) $(SHELF_MONITOR_LIB) $(INSTALL_LD_FLAGS)
 
 $(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
 	@mkdir -p $(dir $@)
@@ -113,6 +113,17 @@ $(BUILD)/ApolloMonitor/%.o: $(SRC)/ApolloMonitor/%.cc
 	@mkdir -p $(dir $@)
 	$(CXX) -c -o $@ $< $(CXX_FLAGS) $(APOLLO_MONITOR_CXX_FLAGS)
 
+#================================================================================
+#== Install
+#================================================================================
+
+install: $(SHELF_MONITOR_OBJ)
+	rm -f $(BIN)/shelf_monitor
+	make $(BIN)/shelf_monitor INSTALL_LD_FLAGS='-Wl,-rpath=$(INSTALL_PATH)/lib'
+	install -m 775 -d $(INSTALL_PATH)/lib
+	install -m 775 -d $(INSTALL_PATH)/bin
+	install -b -m 775 $(BIN)/shelf_monitor ${INSTALL_PATH}/bin
+	install -b -m 775 $(LIB)/* ${INSTALL_PATH}/lib
 
 #================================================================================
 #== Cleanup & helpers
