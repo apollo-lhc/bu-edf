@@ -24,8 +24,10 @@ int main(int argc, char ** argv){
     po::options_description fileOptions{"File"};
 
     fileOptions.add_options()
-      ("sensor", po::value<std::string>(), "value");
-    std::string configFileName = "example.config";
+      ("sensor", po::value<std::string>(), "value")
+      ("graphite_server", po::value<std::string>(), "value")
+      ("graphite_port", po::value<int>(), "value");
+    std::string configFileName = "/etc/graphite_monitor";
     if(argc > 1){
       configFileName=argv[1];
     }
@@ -39,7 +41,6 @@ int main(int argc, char ** argv){
 	// values in config file are space-delimited
 	std::string delimiter = " ";
 	std::vector<std::string> sensorInfo;
-	printf("%s\n",config_options.options[iOption].value[0].c_str());
 	sensorInfo = split_sensor_string(config_options.options[iOption].value[0],delimiter);     
 	
 	try{
@@ -54,13 +55,16 @@ int main(int argc, char ** argv){
 	      
 	    try {
 	      Sensor * newSensor = DevFac->Create(type,sensorInfo);
-	      if(newSensor){
-		newSensor->Connect(IP_addr, port_number);
+	      if(newSensor){		
 		sensors.push_back(newSensor);
 	      }
 	    } catch (std::exception &e){
 	      std::cout << e.what() << std::endl;
 	    }
+	  }else if(option == "graphite_server"){
+	    IP_addr = config_options.options[iOption].value[0];
+	  }else if(option == "graphite_port"){
+	    port_number = atoi(config_options.options[iOption].value[0].c_str());
 	  }
 	}catch (std::exception &e){
 	  std::cout << e.what() << " Invalid line?" << std::endl;
@@ -71,6 +75,10 @@ int main(int argc, char ** argv){
     std::cerr << ex.what() << '\n';
   }
 
+  //Connect to the graphite server
+  for(size_t iSensor = 0; iSensor < sensors.size();iSensor++){
+    sensors[iSensor]->Connect(IP_addr, port_number);
+  }
   
   unsigned int secondsToSleep = 30;
   
