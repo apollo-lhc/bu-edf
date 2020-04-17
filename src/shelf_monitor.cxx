@@ -6,6 +6,9 @@
 #include <fstream>
 #include <boost/program_options.hpp>
 #include <stdexcept>
+#include <base/daemon.hh>
+#include <signal.h>
+#include <syslog.h>  
 
 namespace po = boost::program_options;
 
@@ -15,7 +18,40 @@ std::vector<std::string> split_sensor_string(std::string sensor, std::string con
 
 int main(int argc, char ** argv){
 
-  std::string IP_addr("192.168.10.20");//"127.0.0.1";
+  std::string configFile("/etc/graphite_monitor");
+  std::string runPath("/opt/address_tables");
+  std::string pidFile("/var/run/shelf_monitor.pid");
+  boost::program_options::options_description commandLineOptions{"Options"}; // for parsing command line
+  commandLineOptions.add_options()
+    ("config_file", boost::program_options::value<std::string>(),"config file")
+    ("run_path" ,boost::program_options::value<std::string>(), "run path")
+    ("pid_file" ,boost::program_options::value<std::string>(), "pid file");
+  boost::program_options::variables_map commandLineVM; // for parsing command line 
+  try {
+    // parse command line
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, commandLineOptions), commandLineVM);
+  } catch(const boost::program_options::error &ex) {
+    fprintf(stderr, "Caught exception while parsing command line: %s \nTerminating <daemon name here>\n", ex.what());       
+    return -1;
+  }
+ 
+  //check for CLI arguments
+  if(commandLineVM.count("config_file")) {
+    configFile = commandLineVM["config_file"].as<std::string>();
+  }
+  if(commandLineVM.count("run_path")) {
+    runPath = commandLineVM["run_path"].as<std::string>();
+  }
+  if(commandLineVM.count("pid_file")) {
+    pidFile = commandLineVM["pid_file"].as<std::string>();
+  }  
+  
+  
+  Daemon daemon;
+  daemon.daemonizeThisProgram(pidFile, runPath);
+  unsigned int secondsToSleep = 30;
+
+  std::string IP_addr("127.0.0.1");
   int port_number = 2003; // plaintext data port
 
   // create map that we'll put sensors in
@@ -26,12 +62,10 @@ int main(int argc, char ** argv){
     fileOptions.add_options()
       ("sensor", po::value<std::string>(), "value")
       ("graphite_server", po::value<std::string>(), "value")
-      ("graphite_port", po::value<int>(), "value");
-    std::string configFileName = "/etc/graphite_monitor";
-    if(argc > 1){
-      configFileName=argv[1];
-    }
-    std::ifstream ifs{configFileName};
+      ("graphite_port", po::value<std::string>(), "value")
+      ("poll_period", po::value<std::string>(), "value");
+
+    std::ifstream ifs(configFile.c_str());
     if(ifs){
       po::parsed_options config_options = po::parse_config_file(ifs, fileOptions);
       int num_options = config_options.options.size();
@@ -59,20 +93,21 @@ int main(int argc, char ** argv){
 		sensors.push_back(newSensor);
 	      }
 	    } catch (std::exception &e){
-	      std::cout << e.what() << std::endl;
+	      syslog(LOG_INFO,"%s",e.what());
 	    }
 	  }else if(option == "graphite_server"){
 	    IP_addr = config_options.options[iOption].value[0];
 	  }else if(option == "graphite_port"){
 	    port_number = atoi(config_options.options[iOption].value[0].c_str());
+	  }else if (option == "poll_time"){
+	    secondsToSleep = atoi(config_options.options[iOption].value[0].c_str());
 	  }
 	}catch (std::exception &e){
-	  std::cout << e.what() << " Invalid line?" << std::endl;
+	  syslog(LOG_INFO,"Invalid line: %s",e.what());
 	}
       }
     }
   } catch(const po::error &ex){
-    std::cerr << ex.what() << '\n';
   }
 
   //Connect to the graphite server
@@ -80,14 +115,21 @@ int main(int argc, char ** argv){
     sensors[iSensor]->Connect(IP_addr, port_number);
   }
   
-  unsigned int secondsToSleep = 30;
+
+
+  // ============================================================================
+  // Signal handling
+  struct sigaction sa_INT,sa_TERM,old_sa;
+  daemon.changeSignal(&sa_INT , &old_sa, SIGINT);
+  daemon.changeSignal(&sa_TERM, NULL   , SIGTERM);
+  daemon.SetLoop(true);
   
   
   int attempts = 0;
   int successful = 0;
   int attempts_timer = 0;
   // sleep and repeat this process
-  while(1){
+  while(daemon.GetLoop()){
     for (size_t i = 0; i < sensors.size(); i++ ) {
       attempts++;
       try{
@@ -101,7 +143,7 @@ int main(int argc, char ** argv){
     
     attempts_timer += secondsToSleep;
     if ( attempts_timer >= 600){
-      printf("%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
+      syslog(LOG_INFO,"%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
       attempts = 0;
       successful = 0;
       attempts_timer = 0;
@@ -111,11 +153,11 @@ int main(int argc, char ** argv){
     sleep(secondsToSleep);
     
   }
-  
-  /*if (NULL != ipmi_temperature_sensor_1){
-    delete ipmi_temperature_sensor_1;
-    }*/
-  
+
+  // Restore old action of receiving SIGINT (which is to kill program) before returning 
+  sigaction(SIGINT, &old_sa, NULL);
+  syslog(LOG_INFO,"eyescan Daemon ended\n");
+
   return 0;
 }
 
