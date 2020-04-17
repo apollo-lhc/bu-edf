@@ -20,7 +20,7 @@ int main(int argc, char ** argv){
 
   std::string configFile("/etc/graphite_monitor");
   std::string runPath("/opt/address_tables");
-  std::string pidFile("/var/run/shelf_monitor.pid");
+  std::string pidFile("/var/run/graphite_monitor.pid");
   boost::program_options::options_description commandLineOptions{"Options"}; // for parsing command line
   commandLineOptions.add_options()
     ("config_file", boost::program_options::value<std::string>(),"config file")

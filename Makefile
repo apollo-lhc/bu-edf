@@ -11,18 +11,18 @@ CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3
 LD_FLAGS=-lboost_program_options -lboost_system
 
 #================================================================================
-#== SHELF_MONITOR
+#== GRAPHITE_MONITOR
 #================================================================================
-SHELF_MONITOR_LD_FLAGS=$(LD_FLAGS) -L$(LIB)
-SHELF_MONITOR_LIBS=""
-SHELF_MONITOR_OBJ=$(BUILD)/shelf_monitor.o
+GRAPHITE_MONITOR_LD_FLAGS=$(LD_FLAGS) -L$(LIB)
+GRAPHITE_MONITOR_LIBS=""
+GRAPHITE_MONITOR_OBJ=$(BUILD)/graphite_monitor.o
 
 #================================================================================
 #== Sensor's and Sensor factory
 #================================================================================
 SENSOR_BASE_SRC=$(wildcard $(SRC)/base/*.cc)
 SENSOR_BASE_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(SENSOR_BASE_SRC))
-SHELF_MONITOR_OBJ += $(SENSOR_BASE_OBJ)
+GRAPHITE_MONITOR_OBJ += $(SENSOR_BASE_OBJ)
 
 #================================================================================
 #== FreeIPMI based Sensor
@@ -33,7 +33,7 @@ ATCA_OBJ=$(patsubst $(SRC)/%.cc,$(BUILD)/%.o,$(ATCA_SRC))
 ATCA_LIBS=-lfreeipmi 
 ATCA_LD_FLAGS=-shared -fPIC -Wall -g -O3 -rdynamic
 ifneq ("$(wildcard $(ATCA_LIB))","")
-	SHELF_MONITOR_LIB+=-lATCA
+	GRAPHITE_MONITOR_LIB+=-lATCA
 endif
 
 #================================================================================
@@ -51,7 +51,7 @@ APOLLO_MONITOR_LIBS= -lBUTool_Helpers \
 APOLLO_MONITOR_CXX_FLAGS=-I$(APOLLO_PATH)/include -I$(CACTUS_ROOT)/include 
 APOLLO_MONITOR_LD_FLAGS=-L$(APOLLO_PATH)/lib -Wl,-rpath=$(APOLLO_PATH)/lib -shared -fPIC -Wall -g -O3 -rdynamic
 ifneq ("$(wildcard $(APOLLO_MONITOR_LIB))","")
-	SHELF_MONITOR_LIB+=-lApolloMonitor
+	GRAPHITE_MONITOR_LIB+=-lApolloMonitor
 endif
 
 #================================================================================
@@ -62,13 +62,13 @@ SHELF_SCAN_LIB=-lfreeipmi
 #================================================================================
 
 
-.PHONEY: all clean distclean shelf_monitor shelf_scan lib_ApolloMonitor lib_ATCA list install
-all: shelf_monitor 
+.PHONEY: all clean distclean graphite_monitor shelf_scan lib_ApolloMonitor lib_ATCA list install
+all: graphite_monitor 
 
 #================================================================================
 #== Aliases
 #================================================================================
-shelf_monitor: $(BIN)/shelf_monitor
+graphite_monitor: $(BIN)/graphite_monitor
 shelf_scan: $(BIN)/shelf_scan
 lib_ApolloMonitor: $(APOLLO_MONITOR_LIB)
 lib_ATCA: $(ATCA_LIB)
@@ -76,11 +76,11 @@ lib_ATCA: $(ATCA_LIB)
 #================================================================================
 #== EXEs
 #================================================================================
-$(BIN)/shelf_monitor: $(SHELF_MONITOR_OBJ)
+$(BIN)/graphite_monitor: $(GRAPHITE_MONITOR_OBJ)
 	@mkdir -p $(dir $@)
-	@echo $(SHELF_MONITOR_OBJ)
+	@echo $(GRAPHITE_MONITOR_OBJ)
 	@echo $(SENSOR_BASE_OBJ)
-	$(CXX) -o $@ $^ $(SHELF_MONITOR_LD_FLAGS) $(SHELF_MONITOR_LIB) $(INSTALL_LD_FLAGS)
+	$(CXX) -o $@ $^ $(GRAPHITE_MONITOR_LD_FLAGS) $(GRAPHITE_MONITOR_LIB) $(INSTALL_LD_FLAGS)
 
 $(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
 	@mkdir -p $(dir $@)
@@ -117,12 +117,12 @@ $(BUILD)/ApolloMonitor/%.o: $(SRC)/ApolloMonitor/%.cc
 #== Install
 #================================================================================
 
-install: $(SHELF_MONITOR_OBJ)
-	rm -f $(BIN)/shelf_monitor
-	make $(BIN)/shelf_monitor INSTALL_LD_FLAGS='-Wl,-rpath=$(INSTALL_PATH)/lib'
+install: $(GRAPHITE_MONITOR_OBJ)
+	rm -f $(BIN)/graphite_monitor
+	make $(BIN)/graphite_monitor INSTALL_LD_FLAGS='-Wl,-rpath=$(INSTALL_PATH)/lib'
 	install -m 775 -d $(INSTALL_PATH)/lib
 	install -m 775 -d $(INSTALL_PATH)/bin
-	install -b -m 775 $(BIN)/shelf_monitor ${INSTALL_PATH}/bin
+	install -b -m 775 $(BIN)/graphite_monitor ${INSTALL_PATH}/bin
 	install -b -m 775 $(LIB)/* ${INSTALL_PATH}/lib
 
 #================================================================================
