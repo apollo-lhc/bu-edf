@@ -7,16 +7,21 @@
 #include <string.h>
 #include <string>
 
-FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
+
+
+
+FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
   fru_id = fru_id_;
+  verbose = verbose_option;
   Read();
  
 }
 
-void FRUReader::PrintFRUInfo(bool verbose){
+
+void FRUReader::PrintFRUInfo(){
   if(!verbose){
     printf("0x%02x(%d)", deviceAccessAddress, fru_id);
     if(productName != ""){
@@ -25,8 +30,8 @@ void FRUReader::PrintFRUInfo(bool verbose){
     if(productSerial != ""){
       printf(" : %*s", 10, productSerial.c_str());
     } else {printf(" : N/A"); }
-  }
-  printf("\n");
+    }
+    printf("\n");
 }
 
 void FRUReader::Read(){
@@ -45,9 +50,9 @@ void FRUReader::Read(){
   if (connection < 0){
     printf("bad connection\n");
     throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
-    }
+  }
 
-  ReadInformationLength(ipmiContext_);
+  
 
   uint8_t channel_number = 0;
   uint8_t lun = 0;
@@ -57,7 +62,6 @@ void FRUReader::Read(){
   uint8_t buf_rq[buf_rq_size];
 
   uint8_t read_code = 0x11;
-  //  uint8_t fru_id = 0;
   uint8_t starting_byte_ls = 0;
   uint8_t starting_byte_ms = 0;
   uint8_t num_bytes_to_read = 8;
@@ -94,14 +98,83 @@ void FRUReader::Read(){
 
   ReadHeader();
 
-  // max we can read is 22
-  num_bytes_to_read = 22;
-  buf_rq[4] = num_bytes_to_read;
+  // if not verbose option, we only want to read the product info area
+ 
+  
 
-  int bytes_read = 0;
-  while (bytes_read < total_bytes_used){    
+  if(verbose){
+    ReadInformationLength(ipmiContext_);
+    
+    total_bytes_used = informationLength;
+    // max we can read is 22
+    num_bytes_to_read = 22;
+    buf_rq[4] = num_bytes_to_read;
+    
+    int bytes_read = 0;
+    while (bytes_read < total_bytes_used){    
 
-    int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
+      uint8_t buf_rs[buf_rs_size];
+      
+      int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
+					 channel_number,
+					 deviceAccessAddress,
+					 lun,
+					 net_fn,
+					 (void const *) buf_rq, buf_rq_size,
+					 buf_rs, buf_rs_size);
+      
+      if (raw_result < 0){
+	throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
+      }
+      
+      /* bytes 3 through 3+num_bytes_to_read are the useful information in buf_rs*/
+      for(int i = 3; i < 3+num_bytes_to_read; i++){
+	  data.push_back(buf_rs[i]);
+      }
+
+      
+      if((starting_byte_ls + num_bytes_to_read) > 255 ){
+	starting_byte_ms++;
+	buf_rq[3] = starting_byte_ms;
+      }
+      
+      starting_byte_ls += num_bytes_to_read;
+      buf_rq[2] =  starting_byte_ls;
+      
+      bytes_read += num_bytes_to_read;
+
+    }
+
+    if(chassisInfoStartingOffset){
+      ReadChassisInfo();
+    }
+    
+    if(boardStartingOffset && verbose){
+      ReadBoardArea();
+    }
+    
+    if(productInfoStartingOffset){
+      ReadProductInfo();
+    }
+    
+    if(multiRecordStartingOffset){
+      ReadMultiRecord();
+    }
+    
+
+  } else {
+    // if not in verbose mode, we only want to read product info
+    starting_byte_ls  = productInfoStartingOffset % 256;
+    starting_byte_ms = (int)productInfoStartingOffset/256;
+    buf_rq[2] = starting_byte_ls;
+    buf_rq[3] = starting_byte_ms;
+
+    // read 2 bytes, the 2nd byte (index 1) times 8 is the length of the product info
+    num_bytes_to_read = 2;
+    buf_rq[4] = num_bytes_to_read;
+    
+    // if not verbose, get the data that encodes the length of the product information
+    int raw_product_info_result = ipmi_cmd_raw_ipmb(ipmiContext_,
 				       channel_number,
 				       deviceAccessAddress,
 				       lun,
@@ -109,51 +182,62 @@ void FRUReader::Read(){
 				       (void const *) buf_rq, buf_rq_size,
 				       buf_rs, buf_rs_size);
     
-    if (raw_result < 0){
+    if (raw_product_info_result < 0){
       throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
     }
+
+    // max bytes we can read at a time is 22
+    num_bytes_to_read = 22;
+    buf_rq[4] = num_bytes_to_read;
+    int len_product_info = buf_rs[4]*8;
+    int num_bytes_read = 0;
     
-    /* bytes 3 through 3+num_bytes_to_read are the useful information in buf_rs*/
-    for(int i = 3; i < 3+num_bytes_to_read; i++){
-      data.push_back(buf_rs[i]);
+    while(num_bytes_read < len_product_info){
+
+      uint8_t buf_rs2[buf_rs_size];
+      
+      if (num_bytes_read + num_bytes_to_read > len_product_info){
+	num_bytes_to_read = len_product_info - num_bytes_read;
+	buf_rq[4] = num_bytes_to_read;
+      }
+
+      int raw_result = ipmi_cmd_raw_ipmb(ipmiContext_,
+					 channel_number,
+					 deviceAccessAddress,
+					 lun,
+					 net_fn,
+					 (void const *) buf_rq, buf_rq_size,
+					 buf_rs2, buf_rs_size);
+      
+      if (raw_result < 0){
+	throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext_)));
+      }
+      
+      /* bytes 3 through 3+num_bytes_to_read are the useful information in buf_rs*/
+      for(int i = 3; i < 3+num_bytes_to_read; i++){
+	  productInfoData.push_back(buf_rs2[i]);
+      }
+
+      /* if least signicant byte becomes great*/
+      if((num_bytes_read + num_bytes_to_read) > 255 ){
+	starting_byte_ms++;
+	buf_rq[3] = starting_byte_ms;
+      }
+      
+      starting_byte_ls += num_bytes_to_read;
+      buf_rq[2] =  starting_byte_ls;
+ 
+      num_bytes_read += num_bytes_to_read;
     }
 
-
-    if((starting_byte_ls + num_bytes_to_read) > 255 ){
-      starting_byte_ms++;
-      buf_rq[3] = starting_byte_ms;
+    if(productInfoStartingOffset){
+      ReadProductInfo();
     }
-
-    starting_byte_ls += num_bytes_to_read;
-    buf_rq[2] =  starting_byte_ls;
-
-    bytes_read += num_bytes_to_read;
-
+    
+    
   }
 
   ipmi_ctx_close(ipmiContext_);
-  
-  // check if the apollo contains each section of info and read them if so
-  /*  if(internalUseStartingOffset){
-    ReadInternalUse();
-    }*/
-  
-  if(chassisInfoStartingOffset){
-    ReadChassisInfo();
-  }
-
-  if(boardStartingOffset){
-    ReadBoardArea();
-  }
-
-  if(productInfoStartingOffset){
-    ReadProductInfo();
-  }
-  
-  if(multiRecordStartingOffset){
-    ReadMultiRecord();
-  }
-  
   
 }
 
@@ -212,7 +296,6 @@ void FRUReader::ReadHeader(){
   multiRecordStartingOffset = header[5]*8;
   pad = header[6];
   commonHeaderChecksum = header[7];
-  total_bytes_used = informationLength;
 }
 
 
@@ -375,11 +458,13 @@ std::string FRUReader::GetFruFileId(){
 
 void FRUReader::ReadProductInfo(){
   //  printf("product info:");
-  int lenProductInfo = data[productInfoStartingOffset+1]*8;
-  std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
-  std::vector<uint8_t>::const_iterator last = data.begin() + productInfoStartingOffset + lenProductInfo;
-  productInfoData =  std::vector<uint8_t>(first, last);
-  /*for (int i = 0; i < productInfoData.size(); i++){
+  if(verbose){
+    int lenProductInfo = data[productInfoStartingOffset+1]*8;
+    std::vector<uint8_t>::const_iterator first = data.begin() + productInfoStartingOffset;
+    std::vector<uint8_t>::const_iterator last = data.begin() + productInfoStartingOffset + lenProductInfo;
+    productInfoData =  std::vector<uint8_t>(first, last);
+  }
+  /*  for (int i = 0; i < productInfoData.size(); i++){
     if(i % 8 == 0){
       printf("\n");
     }

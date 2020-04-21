@@ -77,7 +77,8 @@ int main(int argc, char ** argv){
       // check address until we reach invalid fru id
       while(raw_res_fru >= 0){
 
-	FRUReader *apolloReader = new FRUReader(hostname, deviceAddr, fru_id);
+
+	FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id, false);
 
 	// check at this address and fru id for how many bytes are stored
 	raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,
@@ -99,7 +100,11 @@ int main(int argc, char ** argv){
 	  break;
 	}
 
-	apolloReader->PrintFRUInfo(false);
+
+       	if(apolloReader->GetHeader()[0]){
+	  apolloReader->PrintFRUInfo(false);
+	}
+
 	fru_id++;
 	buf_rq[1] = fru_id;
       }
