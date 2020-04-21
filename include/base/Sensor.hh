@@ -39,6 +39,7 @@ private:
   //  Sensor operator=( Sensor& rhs );
   //  Sensor operator=( Sensor rhs );
 
+protected:
   int sockfd;
   
   struct sockaddr_in servaddr;

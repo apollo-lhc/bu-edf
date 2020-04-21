@@ -2,9 +2,8 @@
 #include <freeipmi/api/ipmi-api.h>
 #include <freeipmi/spec/ipmi-authentication-type-spec.h>
 #include <freeipmi/spec/ipmi-privilege-level-spec.h>
-#include <FruReader.hh>
+#include <atca/FRUReader.hh>
 #include <boost/program_options.hpp>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -78,6 +77,7 @@ int main(int argc, char ** argv){
       // check address until we reach invalid fru id
       while(raw_res_fru >= 0){
 
+
 	FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id, false);
 
 	// check at this address and fru id for how many bytes are stored
@@ -99,9 +99,12 @@ int main(int argc, char ** argv){
 	if(num_zeros == 3){
 	  break;
 	}
-	if(apolloReader->GetHeader()[0]){
-	  apolloReader->PrintFruInfo();
+
+
+       	if(apolloReader->GetHeader()[0]){
+	  apolloReader->PrintFRUInfo(false);
 	}
+
 	fru_id++;
 	buf_rq[1] = fru_id;
       }

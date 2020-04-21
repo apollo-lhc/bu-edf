@@ -5,13 +5,14 @@
 #include <vector>
 #include <freeipmi/api/ipmi-api.h>
 
-class FruReader {
+class FRUReader {
 
 public:
 
-  FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option);
 
+  FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option);
   void PrintFruInfo();
+
   
   std::vector<uint8_t> GetHeader();
   std::vector<uint8_t> GetData();
