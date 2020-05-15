@@ -8,7 +8,7 @@ LIB=lib
 INSTALL_PATH?=./install
 
 CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3
-LD_FLAGS=-lboost_program_options -lboost_system
+LD_FLAGS=-lboost_program_options # -lboost_system
 
 #================================================================================
 #== GRAPHITE_MONITOR
@@ -57,7 +57,8 @@ endif
 #================================================================================
 #== Apoll Monitor Sensor
 #================================================================================
-SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ) 
+#SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ)
+SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BUILD)/atca/FRUReader.o
 SHELF_SCAN_LIB=-lfreeipmi
 #================================================================================
 

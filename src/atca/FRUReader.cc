@@ -10,7 +10,7 @@
 
 
 
-FruReader::FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option){
+FRUReader::FRUReader(std::string hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option){
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
@@ -30,8 +30,36 @@ void FRUReader::PrintFRUInfo(){
     if(productSerial != ""){
       printf(" : %*s", 10, productSerial.c_str());
     } else {printf(" : N/A"); }
+  } else {
+    if(boardManufacturer != ""){
+      printf("board manufacturer: %s\n", boardManufacturer.c_str());
     }
-    printf("\n");
+    if(boardName != ""){
+      printf("board name: %s\n",  boardName.c_str());
+    }
+    if(boardSerial != ""){
+      printf("board serial: %s\n", boardSerial.c_str());
+    }
+    if(boardPartNumber != ""){
+      printf("board part number: %s\n", boardPartNumber.c_str());
+    }
+    if(productManufacturer != ""){
+      printf("product manufacturer: %s\n", productManufacturer.c_str());
+    }
+    if(productName != ""){
+      printf("product name: %s\n", productName.c_str());
+    }
+    if(productPartNumber != ""){
+      printf("product part number: %s\n", productPartNumber.c_str());
+    }
+    if(productVersion != ""){
+      printf("product version: %s\n", productVersion.c_str());
+    }
+    if(productSerial != ""){
+      printf("product serial: %s\n", productSerial.c_str());
+    }
+  }
+  printf("\n");
 }
 
 void FRUReader::Read(){
@@ -40,7 +68,7 @@ void FRUReader::Read(){
 
 
    int connection = ipmi_ctx_open_outofband(ipmiContext_,
-					   hostname,
+					    hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,

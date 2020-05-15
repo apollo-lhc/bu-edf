@@ -10,8 +10,8 @@ class FRUReader {
 public:
 
 
-  FruReader(char *hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option);
-  void PrintFruInfo();
+  FRUReader(std::string hostname_, uint8_t deviceAddr, int fru_id_, bool verbose_option);
+  void PrintFRUInfo();
 
   
   std::vector<uint8_t> GetHeader();
@@ -52,7 +52,7 @@ private:
   int informationLength;
   int total_bytes_used;
   
-  char *hostname;
+  std::string hostname;
   uint8_t deviceAccessAddress;
   int fru_id;
   

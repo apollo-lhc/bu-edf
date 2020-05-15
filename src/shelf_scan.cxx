@@ -6,40 +6,44 @@
 #include <boost/program_options.hpp>
 #include <stdexcept>
 #include <string>
+#include <iostream>
 
 namespace po = boost::program_options;
 
 int main(int argc, char ** argv){
+  
 
-   char *hostname;
+  std::string hostname;
+  bool verbose = false;
    try {
+
      po::options_description desc{"Options"};
      desc.add_options()
-       ("host", po::value<std::string>(), "value");
+       ("verbose,v", po::bool_switch(&verbose), "verbose option")
+       ("host", po::value<std::string>(), "host we're connecting to");
 
     po::variables_map vm;
     po::store(parse_command_line(argc, argv, desc),vm);
     po::notify(vm);
 
 
+
     if (vm.count("host")){
-      hostname =  new char[vm["host"].as<std::string>().size() + 1];
-      std::string str_hostname = vm["host"].as<std::string>();
-      std::copy( str_hostname.begin(),  str_hostname.end(), hostname);
-      hostname[str_hostname.size()] = '\0';
+      hostname =  vm["host"].as<std::string>();     
     } else {
-      hostname = "192.168.10.171"; 
+     hostname = "192.168.10.171"; 
     }
+    
     
     } catch ( const po::error &ex ){
      std::cerr << ex.what() << '\n';
     }
   
-  ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
+   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
   //  printf("running shelf scanner for %s:\n", hostname); // do this if verbose
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
-					   hostname,
+					   hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,
@@ -78,7 +82,7 @@ int main(int argc, char ** argv){
       while(raw_res_fru >= 0){
 
 
-	FruReader *apolloReader = new FruReader(hostname, deviceAddr, fru_id, false);
+	FRUReader *apolloReader = new FRUReader(hostname, deviceAddr, fru_id, verbose);
 
 	// check at this address and fru id for how many bytes are stored
 	raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,
@@ -102,7 +106,7 @@ int main(int argc, char ** argv){
 
 
        	if(apolloReader->GetHeader()[0]){
-	  apolloReader->PrintFRUInfo(false);
+	  apolloReader->PrintFRUInfo();
 	}
 
 	fru_id++;
@@ -131,3 +135,4 @@ int main(int argc, char ** argv){
   return 0;
   
 }
+
