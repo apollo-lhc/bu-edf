@@ -51,6 +51,10 @@ int main(int argc, char ** argv){
   daemon.daemonizeThisProgram(pidFile, runPath);
   unsigned int secondsToSleep = 30;
 
+  syslog(LOG_INFO,"Using config file: %s\n",configFile.c_str());
+  syslog(LOG_INFO,"Using run path: %s\n",runPath.c_str());
+  syslog(LOG_INFO,"Using pid file: %s\n",pidFile.c_str());
+  
   std::string IP_addr("127.0.0.1");
   int port_number = 2003; // plaintext data port
 
@@ -69,8 +73,17 @@ int main(int argc, char ** argv){
     if(ifs){
       po::parsed_options config_options = po::parse_config_file(ifs, fileOptions);
       int num_options = config_options.options.size();
-
-
+      {
+	std::string message("Registered Sensor Types:\n");
+	std::vector<std::string> types = DevFac->GetTypes();
+	for(auto it = types.begin();it != types.end();it++){
+	  message.append("\t");
+	  message.append(*it);
+	  message.append("\n");
+	}
+	syslog(LOG_INFO,message.c_str());
+      }
+      
       for ( int iOption = 0; iOption < num_options; iOption++ ) {
 	// values in config file are space-delimited
 	std::string delimiter = " ";
@@ -91,12 +104,13 @@ int main(int argc, char ** argv){
 	      Sensor * newSensor = DevFac->Create(type,sensorInfo);
 	      if(newSensor){		
 		sensors.push_back(newSensor);
+		syslog(LOG_INFO,"Adding sensor: %s\n",type.c_str());
 	      }
 	    } catch (std::exception &e){
 	      syslog(LOG_INFO,"%s",e.what());
 	    }
 	  }else if(option == "graphite_server"){
-	    IP_addr = config_options.options[iOption].value[0];
+	    IP_addr = config_options.options[iOption].value[0];	    
 	  }else if(option == "graphite_port"){
 	    port_number = atoi(config_options.options[iOption].value[0].c_str());
 	  }else if (option == "poll_time"){
@@ -108,11 +122,14 @@ int main(int argc, char ** argv){
       }
     }
   } catch(const po::error &ex){
+    syslog(LOG_ERR,"Config parsing caused exception: %s\n",ex.what());
+    return -1;
   }
 
   //Connect to the graphite server
   for(size_t iSensor = 0; iSensor < sensors.size();iSensor++){
     sensors[iSensor]->Connect(IP_addr, port_number);
+    syslog(LOG_INFO,"Connecting sensor to %s:%d\n",IP_addr.c_str(),port_number);
   }
   
 
@@ -142,7 +159,7 @@ int main(int argc, char ** argv){
     
     
     attempts_timer += secondsToSleep;
-    if ( attempts_timer >= 600){
+    if ( attempts_timer >= 3600){
       syslog(LOG_INFO,"%d out of %d successful reports in the last 10 minutes\n", successful, attempts);
       attempts = 0;
       successful = 0;

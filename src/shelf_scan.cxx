@@ -6,6 +6,7 @@
 #include <boost/program_options.hpp>
 #include <stdexcept>
 #include <string>
+#include <iostream>
 
 namespace po = boost::program_options;
 

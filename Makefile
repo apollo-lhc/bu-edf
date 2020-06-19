@@ -8,7 +8,7 @@ LIB=lib
 INSTALL_PATH?=./install
 
 CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3
-LD_FLAGS=-lboost_program_options -lboost_system
+LD_FLAGS=-lboost_program_options -lboost_system -Wl,-rpath=$(PWD)/lib
 
 #================================================================================
 #== GRAPHITE_MONITOR
@@ -57,8 +57,10 @@ endif
 #================================================================================
 #== Apoll Monitor Sensor
 #================================================================================
-SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ) 
-SHELF_SCAN_LIB=-lfreeipmi
+#SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BASE_OBJ) $(ATCA_OBJ)
+SHELF_SCAN_OBJ=$(BUILD)/shelf_scan.o $(BUILD)/atca/FRUReader.o
+#LD_FLAGS += -Llib
+SHELF_SCAN_LIB=-lfreeipmi 
 #================================================================================
 
 
@@ -80,7 +82,7 @@ $(BIN)/graphite_monitor: $(GRAPHITE_MONITOR_OBJ)
 	@mkdir -p $(dir $@)
 	@echo $(GRAPHITE_MONITOR_OBJ)
 	@echo $(SENSOR_BASE_OBJ)
-	$(CXX) -o $@ $^ $(GRAPHITE_MONITOR_LD_FLAGS) $(GRAPHITE_MONITOR_LIB) $(INSTALL_LD_FLAGS)
+	$(CXX) -o $@ $^ -Wl,--no-as-needed $(GRAPHITE_MONITOR_LD_FLAGS) $(GRAPHITE_MONITOR_LIB) $(INSTALL_LD_FLAGS) 
 
 $(BIN)/shelf_scan: $(SHELF_SCAN_OBJ)
 	@mkdir -p $(dir $@)

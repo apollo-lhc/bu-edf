@@ -1,9 +1,4 @@
 #include <atca/ApolloBlade.hh>
-//#include <atca/IPMITempSensor.hh>
-//#include <freeipmi/api/ipmi-api.h>
-//#include <freeipmi/spec/ipmi-authentication-type-spec.h>
-//#include <freeipmi/spec/ipmi-privilege-level-spec.h>
-//#include <stdexcept>
 
 
 ApolloBlade::ApolloBlade(std::vector<std::string> const & arg){
@@ -64,6 +59,8 @@ void ApolloBlade::SetSensors(){
   sensorNames.push_back(std::pair<std::string,std::string>("13", "CommandModuleFPGAKU"));
   sensorNames.push_back(std::pair<std::string,std::string>("14", "Firefly2"));
   sensorNames.push_back(std::pair<std::string,std::string>("15", "CommandModuleRegulator2"));
+  //  sensorNames.push_back(std::pair<std::string,std::string>("16", "PIM_Temp"));
+  //  sensorNames.push_back(std::pair<std::string,std::string>("17", "PIM_I"));
 
   for(size_t iSensor; iSensor < sensorNames.size();iSensor++){
     args[0] = sensorNames[iSensor].second;

@@ -7,6 +7,7 @@
 #include <netinet/ip.h>
 #include <string>
 
+
 class Sensor {
 
 public:
@@ -41,9 +42,11 @@ private:
 
 protected:
   int sockfd;
-  
+
   struct sockaddr_in servaddr;
 
   std::string databaseName;
+
 };
+
 #endif

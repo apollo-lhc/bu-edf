@@ -22,14 +22,13 @@ IPMITempSensor::IPMITempSensor(std::vector<std::string> const & args){
   if(args.size() < 5){
     throw std::runtime_error("Too few arguments");
   }  
-  SetDatabaseName(args[1] + "IpmiTemperature" + "." + args[0]);
+  SetDatabaseName(args[1] + ".IPMITemperature" + "." + args[0]);
   SetSensorNumber(args[2]);   
   // get the hostname of the machine where the sensor is located
   SetHostname(args[3]);
 
   // get the IPMB address of the device within the machine
   SetDeviceAccessAddress(args[4]);
-  SetHostname(args[2]);
 }
 
 void IPMITempSensor::SetSensorNumber(std::string const & val){

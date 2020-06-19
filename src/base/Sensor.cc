@@ -11,6 +11,8 @@
 
 #include <unistd.h>
 
+#include <syslog.h>
+
 Sensor::Sensor(){
   sockfd = -1;
   bzero(&servaddr, sizeof(servaddr));
@@ -38,7 +40,7 @@ int Sensor::Connect(std::string const &IP_addr, int port_number) {
   }
 
   if (connect(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0){
-    printf("connect error");
+    syslog(LOG_INFO,"connect error");
     close(sockfd);
     sockfd = -1;
     return -1;
@@ -72,7 +74,7 @@ void Sensor::SetDatabaseName(std::string const &name){
 int Sensor::Report(){
   /*CHECK IF databaseName.c_str() is empty (check std::string docs) ,return -1 if so*/
   if (databaseName.empty()){
-    printf("database name is empty! Please update it before calling this function");
+    syslog(LOG_INFO,"database name is empty! Please update it before calling this function");
     return -1;
   }
 

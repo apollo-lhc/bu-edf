@@ -1,0 +1,14 @@
+[Unit]
+Description=Graphite monitoring for Schroff shelf
+After=systemd-udevd.service
+
+[Service]
+Type=forking
+PIDFile=/var/run/graphite_schroff.pid
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/opt/Graphite/bin/graphite_monitor --config_file=/etc/graphite_schroff --run_path=/opt/Graphite-Monitor --pid_file=/var/run/graphite_schroff.pid
+
+[Install]
+WantedBy=basic.target

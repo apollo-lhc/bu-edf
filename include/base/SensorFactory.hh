@@ -36,6 +36,7 @@ public:
 		Sensor * (*fPtr)(std::vector<std::string>));
   void UnRegister(std::string  name);
   Sensor * Create(std::string,std::vector<std::string>);
+  std::vector<std::string> GetTypes();
 private:
   //Singleton stuff
   //Never implement
@@ -52,6 +53,7 @@ private:
     Sensor * (*fPtr)(std::vector<std::string>);
   };
   std::map<std::string,sSensor> sensorMap;
+
 };
 
 #endif

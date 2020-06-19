@@ -59,3 +59,11 @@ Sensor * SensorFactory::Create(std::string name ,std::vector<std::string> args){
   return ret;
   
 }
+
+std::vector<std::string> SensorFactory::GetTypes(){
+  std::vector<std::string> ret;
+  for(auto it = sensorMap.begin();it != sensorMap.end();it++){
+    ret.push_back(it->first);
+  }
+  return ret;
+}
