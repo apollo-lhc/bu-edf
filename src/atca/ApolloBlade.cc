@@ -73,10 +73,10 @@ void ApolloBlade::SetSensors(){
   }
 }
 
-int ApolloBlade::Connect(std::string const &IP_addr, int port_number) {
+int ApolloBlade::DoConnect() {
   for(int i = 0; i < apolloSensors.size(); i++){
     // need to throw exception if one of these fails
-    if(apolloSensors[i]->Connect(IP_addr, port_number) < 0) {
+    if(apolloSensors[i]->Connect(IP, port) < 0) {
       return -1;
     }
   }

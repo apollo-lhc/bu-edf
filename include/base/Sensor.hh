@@ -13,7 +13,7 @@ class Sensor {
 public:
   Sensor();
   virtual ~Sensor();
-
+  
   virtual int Connect(std::string const &IP_addr, int port_number);
 
   int Disconnect();
@@ -40,13 +40,13 @@ private:
   //  Sensor operator=( Sensor& rhs );
   //  Sensor operator=( Sensor rhs );
 
-protected:
+protected:  
+  std::string IP;
+  int port;  
   int sockfd;
-
-  struct sockaddr_in servaddr;
-
   std::string databaseName;
 
+  virtual int DoConnect();
 };
 
 #endif
