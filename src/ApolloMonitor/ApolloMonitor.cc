@@ -19,7 +19,13 @@ int ApolloMonitor::Report() {
       }
       end++;
       //Adding apollo
-      writen(sockfd, base.c_str(), base.size());
+      if(writen(sockfd, base.c_str(), base.size()) < 0){
+	if( DoConnect() < 0){
+	  syslog(LOG_WARNING,"connect error");
+	  close(sockfd);
+	  sockfd = -1;
+	  return -1;
+      }
       //write "."
       writen(sockfd, ".", 1);
       //write the rest of the value
