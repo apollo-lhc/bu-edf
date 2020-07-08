@@ -4,6 +4,8 @@
 #include <vector>
 #include <stdexcept>
 
+#include <syslog.h>
+
 int ApolloMonitor::Report() {
   int sensorCount = 0;
   try{
@@ -25,6 +27,7 @@ int ApolloMonitor::Report() {
 	  close(sockfd);
 	  sockfd = -1;
 	  return -1;
+	}
       }
       //write "."
       writen(sockfd, ".", 1);
@@ -32,11 +35,11 @@ int ApolloMonitor::Report() {
       writen(sockfd,sensorVals.c_str() + iS,end - iS);
       sensorCount++;
       iS = end;
-    }	
+      }	
   }catch(BUException::exBase const & e){
-    //syslog(LOG_ERR,"Caught BUException: %s\n   Info: %s\n",e.what(),e.Description());          
+      syslog(LOG_ERR,"Caught BUException: %s\n   Info: %s\n",e.what(),e.Description());          
   }catch(std::exception const & e){
-    //syslog(LOG_ERR,"Caught std::exception: %s\n",e.what());          
+      syslog(LOG_ERR,"Caught std::exception: %s\n",e.what());          
   }
   return sensorCount;
 }

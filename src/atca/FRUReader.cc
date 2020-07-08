@@ -7,7 +7,8 @@
 #include <string.h>
 #include <string>
 
-FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_){
+FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_)
+{
 
   hostname = hostname_;
   deviceAccessAddress = deviceAddr;
@@ -180,7 +181,6 @@ int FRUReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 
   const size_t buf_rs_size = 256;
   uint8_t buf_rs[buf_rs_size];
-  try{
   int raw_result = ipmi_cmd_raw_ipmb(ipmiContext,
 				     channel_number,
 				     deviceAccessAddress,
@@ -188,17 +188,16 @@ int FRUReader::ReadInformationLength(ipmi_ctx_t ipmiContext) {
 				     net_fn,
 				     (void const *) buf_rq, buf_rq_size,
 			             buf_rs, buf_rs_size);
-  } catch(std::runtime_error &e){
-    std::cerr << e.what() << '\n';
+  if (raw_result < 0){
+    ipmi_ctx_close(ipmiContext);
+    throw std::runtime_error(strerror(ipmi_ctx_errnum(ipmiContext)));  
   }
-  //  if (raw_result < 0){
-  //printf("nothing found for length\n");
-  //}
+
   uint8_t length_ls_byte = buf_rs[2];
   uint8_t length_ms_byte = buf_rs[3];
 
   informationLength = 256*length_ms_byte + length_ls_byte;
-
+  return 0;
 }
 
 
@@ -221,7 +220,7 @@ void FRUReader::ReadInternalUse(){
   std::vector<uint8_t>::const_iterator first = data.begin() + internalUseStartingOffset;
   std::vector<uint8_t>::const_iterator last = data.begin() + internalUseStartingOffset + lenInternalUse;
   internalUseData = std::vector<uint8_t>(first, last);
-  for (int i = 0; i < internalUseData.size(); i++){                                            
+  for (size_t i = 0; i < internalUseData.size(); i++){                                            
     if(i % 8 == 0){                                                                      
       printf("\n");                                                                      
     }                                                                                    
@@ -343,7 +342,7 @@ void FRUReader::ReadBoardArea(){
 }
 std::string FRUReader::ReadBoardField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
-  uint8_t field_type = ((field_type_and_length) & 0xc0);
+  //uint8_t field_type = ((field_type_and_length) & 0xc0); //Check in future...
   std::string field = "";
   for(int i = 0; i < field_length; i++){
     field += boardData[field_index+i];
@@ -489,7 +488,7 @@ void FRUReader::ReadProductInfo(){
 }
 std::string FRUReader::ReadProductField(uint8_t field_type_and_length, uint8_t field_index){
   uint8_t field_length = ((field_type_and_length) & 0x3f);
-  uint8_t field_type = ((field_type_and_length) & 0xc0);
+  //  uint8_t field_type = ((field_type_and_length) & 0xc0); //check in future...
   std::string field = "";
   for(int i = 0; i < field_length; i++){
     field += productInfoData[field_index+i];

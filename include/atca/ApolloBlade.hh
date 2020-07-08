@@ -16,7 +16,13 @@ public:
   virtual int Report();
 
   virtual float GetVal();
+
+protected:
+  virtual int DoConnect();
+
 private:
+
+
 
   void SetModuleNumber(std::string const &);
 
