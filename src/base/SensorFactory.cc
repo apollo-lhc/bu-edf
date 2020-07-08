@@ -5,9 +5,9 @@
 SensorFactory * SensorFactory::pInstance = NULL;
 
 
-static bool CLIArgsValid(std::string const & flag,std::string const & full_flag){
-  return (!flag.empty() && !full_flag.empty());
-}
+//static bool CLIArgsValid(std::string const & flag,std::string const & full_flag){
+//  return (!flag.empty() && !full_flag.empty());
+//}
 
 bool SensorFactory::Register(std::string type, 
 			     std::string name, 
