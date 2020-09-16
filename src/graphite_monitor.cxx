@@ -81,7 +81,7 @@ int main(int argc, char ** argv){
 	  message.append(*it);
 	  message.append("\n");
 	}
-	syslog(LOG_INFO,message.c_str());
+	syslog(LOG_INFO,"%s",message.c_str());
       }
       
       for ( int iOption = 0; iOption < num_options; iOption++ ) {
