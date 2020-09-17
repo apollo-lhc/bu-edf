@@ -48,6 +48,69 @@ float ApolloMonitor::GetVal(){
   return 0.0;
 }
 
+static std::string ReplaceInString(std::string original,
+				   std::string const & replace,
+				   std::string const & replacement){
+  std::string ret;
+  size_t lastPos = 0;
+  size_t findPos = original.find(replace);
+  while((findPos != std::string::npos) &&
+	(findPos < original.size())){
+    //append from the last position to this found position                                      
+    ret.append(original.begin()+lastPos,
+	       original.begin()+findPos);
+    //append the replacement value
+    ret.append(replacement);
+    //move the last pointer, to the find pointer plus the replace size
+    lastPos = findPos + replace.size();
+    findPos = original.find(replace,lastPos);
+  }
+  //append the end of the string
+  ret.append(original.begin() + lastPos,
+	     original.end());
+  return ret;
+}                                                    
+
+void ApolloMonitor::ReplaceSN(std::string & original){  
+  char buffer[20];
+  snprintf(buffer,20,"%d",SM->GetSerialNumber());
+  original = ReplaceInString(original,"$SN",buffer);  
+}
+
+void ApolloMonitor::ReplaceRN(std::string & original){  
+  char buffer[20];
+  snprintf(buffer,20,"%d",SM->GetRevNumber());
+  original = ReplaceInString(original,"$RN",buffer);  
+}
+
+void ApolloMonitor::ReplaceShelfID(std::string & original){  
+  char buffer[20];
+  snprintf(buffer,20,"%d",SM->GetShelfID());
+  original = ReplaceInString(original,"$SHELF_ID",buffer);  
+}
+
+void ApolloMonitor::ReplaceZynqIP(std::string & original){  
+  char buffer[20];
+  snprintf(buffer,20,"%u-%u-%u-%u",  // "-" are because graphite splits on "."s
+	   (SM->GetZynqIP()>>24)&0xFF,
+	   (SM->GetZynqIP()>>16)&0xFF,
+	   (SM->GetZynqIP()>> 8)&0xFF,
+	   (SM->GetZynqIP()>> 0)&0xFF
+	   );
+  original = ReplaceInString(original,"$ZYNQ_IP",buffer);  
+}
+
+void ApolloMonitor::ReplaceIPMCIP(std::string & original){  
+  char buffer[20];
+  snprintf(buffer,20,"%u-%u-%u-%u", // "-" are because graphite splits on "."s
+	   (SM->GetIPMCIP()>>24)&0xFF,
+	   (SM->GetIPMCIP()>>16)&0xFF,
+	   (SM->GetIPMCIP()>> 8)&0xFF,
+	   (SM->GetIPMCIP()>> 0)&0xFF
+	   );
+  original = ReplaceInString(original,"$IPMC_IP",buffer);  
+}
+
 ApolloMonitor::ApolloMonitor(std::vector<std::string> const & args){
   /*
   args:
@@ -71,9 +134,12 @@ ApolloMonitor::ApolloMonitor(std::vector<std::string> const & args){
   SM->Connect(connArgs);
 
   //Build base name using apollo SN
-  std::stringstream ss;
-  ss << args[1] ;
-//     << "Apollo" 
-//     << SM->Read("SLAVE_I2C.S8.IPMC_IP.BYTE_3");  //please fix me! (OK @ BU)
-  base = ss.str();
+  base = args[1];
+  //Do any replacements we need to do
+  ReplaceSN(base);
+  ReplaceRN(base);
+  ReplaceShelfID(base);
+  ReplaceZynqIP(base);
+  ReplaceIPMCIP(base);
+
 }

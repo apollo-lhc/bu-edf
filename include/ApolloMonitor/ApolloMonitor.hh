@@ -11,6 +11,12 @@ public:
   virtual int Report();
   virtual float GetVal();
 private:
+  void ReplaceSN(std::string &);
+  void ReplaceRN(std::string &);
+  void ReplaceShelfID(std::string &);
+  void ReplaceZynqIP(std::string &);
+  void ReplaceIPMCIP(std::string &);
+
   void SetSensors();
   std::string base;
   ApolloSM * SM;
