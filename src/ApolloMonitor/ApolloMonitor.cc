@@ -71,25 +71,25 @@ static std::string ReplaceInString(std::string original,
   return ret;
 }                                                    
 
-static void ReplaceSN(std::string & original){  
+void ApolloMonitor::ReplaceSN(std::string & original){  
   char buffer[20];
   snprintf(buffer,20,"%d",SM->GetSerialNumber());
   original = ReplaceInString(original,"$SN",buffer);  
 }
 
-static void ReplaceRN(std::string & original){  
+void ApolloMonitor::ReplaceRN(std::string & original){  
   char buffer[20];
   snprintf(buffer,20,"%d",SM->GetRevNumber());
   original = ReplaceInString(original,"$RN",buffer);  
 }
 
-static void ReplaceShelfID(std::string & original){  
+void ApolloMonitor::ReplaceShelfID(std::string & original){  
   char buffer[20];
   snprintf(buffer,20,"%d",SM->GetShelfID());
   original = ReplaceInString(original,"$SHELF_ID",buffer);  
 }
 
-static void ReplaceZynqIP(std::string & original){  
+void ApolloMonitor::ReplaceZynqIP(std::string & original){  
   char buffer[20];
   snprintf(buffer,20,"%u-%u-%u-%u",  // "-" are because graphite splits on "."s
 	   (SM->GetZynqIP()>>24)&0xFF,
@@ -100,7 +100,7 @@ static void ReplaceZynqIP(std::string & original){
   original = ReplaceInString(original,"$ZYNQ_IP",buffer);  
 }
 
-static void ReplaceIPMCIP(std::string & original){  
+void ApolloMonitor::ReplaceIPMCIP(std::string & original){  
   char buffer[20];
   snprintf(buffer,20,"%u-%u-%u-%u", // "-" are because graphite splits on "."s
 	   (SM->GetIPMCIP()>>24)&0xFF,
