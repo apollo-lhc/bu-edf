@@ -15,7 +15,6 @@
 
 Sensor::Sensor(){
   sockfd = -1;
-  bzero(&servaddr, sizeof(servaddr));
 }
 
 Sensor::~Sensor(){
@@ -23,6 +22,18 @@ Sensor::~Sensor(){
 }
 
 int Sensor::Connect(std::string const &IP_addr, int port_number) {
+  sockfd = -1;
+  IP = IP_addr;
+  port = port_number;
+  return DoConnect();
+}
+
+int Sensor::DoConnect(){
+  if(sockfd > 0){
+    close(sockfd);
+  }
+  
+  struct sockaddr_in servaddr;
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     return -1;
   }
@@ -30,9 +41,9 @@ int Sensor::Connect(std::string const &IP_addr, int port_number) {
   bzero(&servaddr, sizeof(servaddr));
 
   servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons(port_number); /* 2003 is plaintext port */
+  servaddr.sin_port = htons(port); /* 2003 is plaintext port */
 
-  if (inet_pton(AF_INET, IP_addr.c_str(), &servaddr.sin_addr) <= 0) {
+  if (inet_pton(AF_INET, IP.c_str(), &servaddr.sin_addr) <= 0) {
       printf("inet_pton error for localhost");
       close(sockfd);
       sockfd = -1;
@@ -86,7 +97,7 @@ int Sensor::Report(){
 
   /* create our string to write to our whisper file */
   const size_t stringToWriteLen = 200;
-  char *stringToWrite = new char[stringToWriteLen+1];
+  char stringToWrite[stringToWriteLen+1];
   memset(stringToWrite, 0, stringToWriteLen+1);
 
   /* make into one string */ /* make this database string*/
@@ -94,19 +105,17 @@ int Sensor::Report(){
 
   /* write the result */
   if (writen(sockfd, stringToWrite, strlen(stringToWrite)) < 0) {
-    printf("writen failed");
-    if (connect(sockfd, (struct sockaddr*) &servaddr, sizeof(servaddr)) < 0){
+    syslog(LOG_WARNING,"Sensor write failed.");
+    if( DoConnect() < 0){
       printf("connect error");
       close(sockfd);
       sockfd = -1;
       return -1;
     }
     writen(sockfd, stringToWrite, strlen(stringToWrite));
-    delete [] stringToWrite;
     return -1;
   }
 
-  delete [] stringToWrite;
 
   return 0;
 }

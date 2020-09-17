@@ -62,7 +62,7 @@ void ApolloBlade::SetSensors(){
   //  sensorNames.push_back(std::pair<std::string,std::string>("16", "PIM_Temp"));
   //  sensorNames.push_back(std::pair<std::string,std::string>("17", "PIM_I"));
 
-  for(size_t iSensor; iSensor < sensorNames.size();iSensor++){
+  for(size_t iSensor = 0; iSensor < sensorNames.size();iSensor++){
     args[0] = sensorNames[iSensor].second;
     args[2] = sensorNames[iSensor].first;
 
@@ -73,10 +73,10 @@ void ApolloBlade::SetSensors(){
   }
 }
 
-int ApolloBlade::Connect(std::string const &IP_addr, int port_number) {
-  for(int i = 0; i < apolloSensors.size(); i++){
+int ApolloBlade::DoConnect() {
+  for(size_t i = 0; i < apolloSensors.size(); i++){
     // need to throw exception if one of these fails
-    if(apolloSensors[i]->Connect(IP_addr, port_number) < 0) {
+    if(apolloSensors[i]->Connect(IP, port) < 0) {
       return -1;
     }
   }
@@ -84,7 +84,7 @@ int ApolloBlade::Connect(std::string const &IP_addr, int port_number) {
 }
 
 int ApolloBlade::Report() {
-  for(int i = 0; i < apolloSensors.size(); i++){
+  for(size_t i = 0; i < apolloSensors.size(); i++){
     try {
       apolloSensors[i]->Report();
     } catch (std::runtime_error &e) {

@@ -11,12 +11,16 @@ public:
 
   ApolloBlade(std::vector<std::string> const &);
 
-  virtual int Connect(std::string const &IP_addr, int port_number);
+  //  virtual int Connect(std::string const &IP_addr, int port_number);
   
   virtual int Report();
 
   virtual float GetVal();
+
+
 private:
+
+  virtual int DoConnect();
 
   void SetModuleNumber(std::string const &);
 

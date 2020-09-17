@@ -1,5 +1,4 @@
 
-
 CXX=g++
 SRC=src
 BUILD=build
@@ -7,7 +6,7 @@ BIN=bin
 LIB=lib
 INSTALL_PATH?=./install
 
-CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3
+CXX_FLAGS=-Iinclude -std=c++11 -fPIC -Wall -g -O3 -Werror -Wpedantic
 LD_FLAGS=-lboost_program_options -lboost_system -Wl,-rpath=$(PWD)/lib
 
 #================================================================================

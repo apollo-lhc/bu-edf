@@ -1,3 +1,5 @@
+#ifndef __APOLLO_MONITOR_HH__
+#define __APOLLO_MONITOR_HH__
 #include <base/SensorFactory.hh>
 #include <base/Sensor.hh>
 #include <ApolloSM/ApolloSM.hh>
@@ -17,3 +19,4 @@ private:
 };
 
 RegisterSensor(ApolloMonitor,"ApolloMonitor")
+#endif

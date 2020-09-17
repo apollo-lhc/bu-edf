@@ -117,7 +117,7 @@ float IPMIFanSpeedSensor::GetVal(){
 
   
   float raw_fan_speed = float(ipmbSensorVal->sensorValue);
-  float fan_speed_rpm = raw_fan_speed*46;
+  //  float fan_speed_rpm = raw_fan_speed*46;
   int fan_speed_percent = raw_fan_speed/1.46;
   return fan_speed_percent;
 }
