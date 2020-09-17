@@ -73,19 +73,19 @@ static std::string ReplaceInString(std::string original,
 
 void ApolloMonitor::ReplaceSN(std::string & original){  
   char buffer[20];
-  snprintf(buffer,20,"%d",SM->GetSerialNumber());
+  snprintf(buffer,20,"%02d",SM->GetSerialNumber());
   original = ReplaceInString(original,"$SN",buffer);  
 }
 
 void ApolloMonitor::ReplaceRN(std::string & original){  
   char buffer[20];
-  snprintf(buffer,20,"%d",SM->GetRevNumber());
+  snprintf(buffer,20,"%02d",SM->GetRevNumber());
   original = ReplaceInString(original,"$RN",buffer);  
 }
 
 void ApolloMonitor::ReplaceShelfID(std::string & original){  
   char buffer[20];
-  snprintf(buffer,20,"%d",SM->GetShelfID());
+  snprintf(buffer,20,"%02d",SM->GetShelfID());
   original = ReplaceInString(original,"$SHELF_ID",buffer);  
 }
 
