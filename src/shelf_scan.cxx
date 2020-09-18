@@ -89,6 +89,7 @@ int main(int argc, char ** argv){
   
   // check every ipmb address
   const size_t dotCountMax = 80;  
+  printf("This may take a minute due to IPMB timeouts.\n");
   printf("Searching...\n[");
   for(size_t iDot = 0;iDot < 256/(256/dotCountMax);iDot++){
     printf("=");
@@ -153,8 +154,8 @@ int main(int argc, char ** argv){
   ipmi_ctx_close(ipmiContext_);
 
   printf("Shelf contents\n");
-  printf("IPMB(FRU) | %*s | %*s |\n",60,"Product Name",10,"SN");
-  printf("=======================================================================================\n");
+  printf("IPMB(FRU) | %*s | %*s \n",60,"Product Name",10,"SN");
+  printf("======================================================================================\n");
   for(size_t iFRU = 0; iFRU < FRUs.size();iFRU++){
     FRUs[iFRU]->PrintFRUInfo(false);
   }
