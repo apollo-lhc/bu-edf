@@ -88,15 +88,15 @@ int main(int argc, char ** argv){
   std::vector<FRUReader*> FRUs;
   
   // check every ipmb address
-  const size_t dotCountMax = 64;  
+  const size_t dotCountMax = 80;  
   printf("Searching...\n[");
-  for(size_t iDot = 0;iDot < dotCountMax;iDot++){
+  for(size_t iDot = 0;iDot < 256/(256/dotCountMax);iDot++){
     printf("=");
   }
   printf("]\n[.");
   size_t deltaDot = 256/dotCountMax;
   size_t nextDot = deltaDot;
-  for(  uint16_t deviceAddr = 0x02; deviceAddr <= 0xFF;deviceAddr++){
+  for(  uint16_t deviceAddr = 0x02; deviceAddr <= 0xFF;){
     try{
       if(deviceAddr > nextDot){
 	printf(".");
