@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 
-FRUReader::FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_)
+FRUReader::FRUReader(std::string const & hostname_, uint8_t deviceAddr, int fru_id_)
 {
 
   hostname = hostname_;
@@ -36,7 +36,7 @@ void FRUReader::Read(){
 
 
    int connection = ipmi_ctx_open_outofband(ipmiContext_,
-					   hostname,
+					    hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,

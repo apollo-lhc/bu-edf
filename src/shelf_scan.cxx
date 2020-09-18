@@ -12,35 +12,41 @@ namespace po = boost::program_options;
 
 int main(int argc, char ** argv){
 
-   char *hostname;
-   try {
-     po::options_description desc{"Options"};
-     desc.add_options()
-       ("host", po::value<std::string>(), "value");
+  std::string hostname;
+  try {
+    po::options_description cliOptions{"Options"};
+    cliOptions.add_options()
+      ("help,h", "Help Screen")
+      ("host", po::value<std::string>(), "Shelf Manager hostname");
 
-    po::variables_map vm;
-    po::store(parse_command_line(argc, argv, desc),vm);
-    po::notify(vm);
+    po::variables_map allOptions;
+    po::store(parse_command_line(argc, argv, cliOptions),allOptions);
+    po::notify(allOptions);
+
+    //Bail quickly if "help" was specified 
+    if(allOptions.find("help") != allOptions.end()){
+      std::cout << cliOptions << std::endl;
+      return 0;
+    }
 
 
-    if (vm.count("host")){
-      hostname =  new char[vm["host"].as<std::string>().size() + 1];
-      std::string str_hostname = vm["host"].as<std::string>();
-      std::copy( str_hostname.begin(),  str_hostname.end(), hostname);
-      hostname[str_hostname.size()] = '\0';
+    if (allOptions.count("host")){
+      hostname = allOptions["host"].as<std::string>();
     } else {
-      hostname = "192.168.10.171"; 
+      std::cout << "Missing \"host\" argument" << std::endl;
+      std::cout << cliOptions << std::endl;
+      return 0;
     }
     
-    } catch ( const po::error &ex ){
-     std::cerr << ex.what() << '\n';
-    }
+  } catch ( const po::error &ex ){
+    std::cerr << ex.what() << '\n';
+  }
   
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
   //  printf("running shelf scanner for %s:\n", hostname); // do this if verbose
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
-					   hostname,
+					   hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,
@@ -78,7 +84,7 @@ int main(int argc, char ** argv){
       // check address until we reach invalid fru id
       while(raw_res_fru >= 0){
 
-	FRUReader *apolloReader = new FRUReader(hostname, deviceAddr, fru_id);
+	FRUReader *apolloReader = new FRUReader(hostname.c_str(), deviceAddr, fru_id);
 
 	// check at this address and fru id for how many bytes are stored
 	raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,

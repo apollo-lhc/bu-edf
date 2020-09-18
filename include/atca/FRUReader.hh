@@ -9,7 +9,7 @@ class FRUReader {
 
 public:
 
-  FRUReader(char *hostname_, uint8_t deviceAddr, int fru_id_);
+  FRUReader(std::string const & hostname_, uint8_t deviceAddr, int fru_id_);
 
   void PrintFRUInfo(bool verbose);
   
@@ -49,7 +49,7 @@ private:
   int informationLength;
   int total_bytes_used;
   
-  char *hostname;
+  std::string hostname;
   uint8_t deviceAccessAddress;
   int fru_id;
   
