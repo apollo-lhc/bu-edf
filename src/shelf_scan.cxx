@@ -10,37 +10,52 @@
 
 namespace po = boost::program_options;
 
+char GetSpinnyThing(){
+  static char spinnyThing[] = {'-','\\','|','/'};
+  static int sel;
+  //cycle through the 4 options
+  sel++;
+  sel &= 0x3;
+  return spinnyThing[sel];
+}
+
 int main(int argc, char ** argv){
 
-   char *hostname;
-   try {
-     po::options_description desc{"Options"};
-     desc.add_options()
-       ("host", po::value<std::string>(), "value");
+  std::string hostname;
+  try {
+    po::options_description cliOptions{"Options"};
+    cliOptions.add_options()
+      ("help,h", "Help Screen")
+      ("host", po::value<std::string>(), "Shelf Manager hostname");
 
-    po::variables_map vm;
-    po::store(parse_command_line(argc, argv, desc),vm);
-    po::notify(vm);
+    po::variables_map allOptions;
+    po::store(parse_command_line(argc, argv, cliOptions),allOptions);
+    po::notify(allOptions);
+
+    //Bail quickly if "help" was specified 
+    if(allOptions.find("help") != allOptions.end()){
+      std::cout << cliOptions << std::endl;
+      return 0;
+    }
 
 
-    if (vm.count("host")){
-      hostname =  new char[vm["host"].as<std::string>().size() + 1];
-      std::string str_hostname = vm["host"].as<std::string>();
-      std::copy( str_hostname.begin(),  str_hostname.end(), hostname);
-      hostname[str_hostname.size()] = '\0';
+    if (allOptions.count("host")){
+      hostname = allOptions["host"].as<std::string>();
     } else {
-      hostname = "192.168.10.171"; 
+      std::cout << "Missing \"host\" argument" << std::endl;
+      std::cout << cliOptions << std::endl;
+      return 0;
     }
     
-    } catch ( const po::error &ex ){
-     std::cerr << ex.what() << '\n';
-    }
+  } catch ( const po::error &ex ){
+    std::cerr << ex.what() << '\n';
+  }
   
   ipmi_ctx_t ipmiContext_ = ipmi_ctx_create();
 
   //  printf("running shelf scanner for %s:\n", hostname); // do this if verbose
   int connection = ipmi_ctx_open_outofband(ipmiContext_,
-					   hostname,
+					   hostname.c_str(),
 					   "",
 					   "",
 					   IPMI_AUTHENTICATION_TYPE_NONE,
@@ -53,7 +68,7 @@ int main(int argc, char ** argv){
     return 0;
   }
   
-  uint8_t deviceAddr = 0x02;
+
 			    
   uint8_t channel_number = 0;
   uint8_t lun = 0;
@@ -61,7 +76,7 @@ int main(int argc, char ** argv){
   const size_t buf_rq_size = 2;
   uint8_t buf_rq[buf_rq_size];
   uint8_t read_code = 0x10;
-  uint8_t fru_id = 0;
+  uint16_t fru_id = 0;
 
   buf_rq[0] = read_code;
   buf_rq[1] = fru_id;
@@ -69,17 +84,30 @@ int main(int argc, char ** argv){
 
   const size_t buf_rs_size = 256;
   uint8_t buf_rs[buf_rs_size];
-
+  //Vector of found FRUs
+  std::vector<FRUReader*> FRUs;
+  
   // check every ipmb address
-  while(deviceAddr < 256){
+  const size_t dotCountMax = 64;  
+  printf("Searching...\n[");
+  for(size_t iDot = 0;iDot < dotCountMax;iDot++){
+    printf("=");
+  }
+  printf("]\n[.");
+  size_t deltaDot = 256/dotCountMax;
+  size_t nextDot = deltaDot;
+  for(  uint16_t deviceAddr = 0x02; deviceAddr <= 0xFF;deviceAddr++){
     try{
-
+      if(deviceAddr > nextDot){
+	printf(".");
+	fflush(stdout);
+	nextDot+=deltaDot;
+      }
       int raw_res_fru = 0;
       // check address until we reach invalid fru id
       while(raw_res_fru >= 0){
-
-	FRUReader *apolloReader = new FRUReader(hostname, deviceAddr, fru_id);
-
+	printf("%c",GetSpinnyThing());
+	fflush(stdout);
 	// check at this address and fru id for how many bytes are stored
 	raw_res_fru = ipmi_cmd_raw_ipmb(ipmiContext_,
 					channel_number,
@@ -96,16 +124,17 @@ int main(int argc, char ** argv){
 	    num_zeros++;
 	  }
 	}
+	printf("%c",8);
+	fflush(stdout);
 	if(num_zeros == 3){
 	  break;
 	}
+	FRUReader *FRU = new FRUReader(hostname.c_str(), deviceAddr, fru_id);
+	FRUs.push_back(FRU);
 
-	apolloReader->PrintFRUInfo(false);
 	fru_id++;
 	buf_rq[1] = fru_id;
       }
-      //      printf("here\n");
-      //}
 
 
     } catch(std::runtime_error &e) {
@@ -120,10 +149,17 @@ int main(int argc, char ** argv){
     deviceAddr += 2;
     
   }
-  
+  printf("]\n\n\n");
   ipmi_ctx_close(ipmiContext_);
+
+  printf("Shelf contents\n");
+  printf("IPMB(FRU) | %*s | %*s |\n",60,"Product Name",10,"SN");
+  printf("=======================================================================================\n");
+  for(size_t iFRU = 0; iFRU < FRUs.size();iFRU++){
+    FRUs[iFRU]->PrintFRUInfo(false);
+  }
   
-  //}
+	
   return 0;
   
 }
