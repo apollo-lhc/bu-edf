@@ -123,7 +123,7 @@ install: $(GRAPHITE_MONITOR_OBJ)
 	make $(BIN)/graphite_monitor INSTALL_LD_FLAGS='-Wl,-rpath=$(INSTALL_PATH)/lib'
 	install -m 775 -d $(INSTALL_PATH)/lib
 	install -m 775 -d $(INSTALL_PATH)/bin
-	install -b -m 775 $(BIN)/graphite_monitor ${INSTALL_PATH}/bin
+	install -b -m 775 $(BIN)/* ${INSTALL_PATH}/bin
 	install -b -m 775 $(LIB)/* ${INSTALL_PATH}/lib
 
 #================================================================================
