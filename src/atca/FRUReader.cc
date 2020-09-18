@@ -19,13 +19,18 @@ FRUReader::FRUReader(std::string const & hostname_, uint8_t deviceAddr, int fru_
 
 void FRUReader::PrintFRUInfo(bool verbose){
   if(!verbose){
-    printf("0x%02x(%d)", deviceAccessAddress, fru_id);
+    printf(" 0x%02x(%02d)", deviceAccessAddress, fru_id);
     if(productName != ""){
-      printf(" : %*s", 10, productName.c_str());
-    } 
+      printf(" | %*s", 60, productName.c_str());
+    } else {
+      printf(" | %*s", 60, "Unknown");
+    }
+
     if(productSerial != ""){
-      printf(" : %*s", 10, productSerial.c_str());
-    } else {printf(" : N/A"); }
+      printf(" | %*s", 10, productSerial.c_str());
+    } else {
+      printf(" | %*s", 10,"N/A");
+    }
   }
   printf("\n");
 }
