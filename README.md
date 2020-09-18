@@ -2,6 +2,9 @@
 
 This code monitors a range of sensors and pushes their information to a Graphite/Grafana server for plotting.
 
+## shelf_scan
+A simple utility to scan an ATCA shelf and reports the board located in it and their IPMB addresses. 
+
 ## shelf_monitor
 This executable reads a config file (/etc/graphite_monitor or CL arg) that contains the Graphite connection information and a list of sensors to be built. 
 
