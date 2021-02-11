@@ -14,9 +14,17 @@ all				       distclean		lib/libATCA.so
 bin/shelf_monitor		       lib_ApolloMonitor	shelf_monitor
 bin/shelf_scan			       				lib_ATCA		shelf_scan
 clean												lib/libApolloMonitor.so
+```
+
+
+```bash
 [root@apollo06 Grafana-Monitor]# make lib_ApolloMonitor
 g++ -c -o build/ApolloMonitor/ApolloMonitor.o src/ApolloMonitor/ApolloMonitor.cc -Iinclude -std=c++11 -fPIC -Wall -g -O3 -I/opt/BUTool/include -I/opt/cactus/include 
 g++ -o lib/libApolloMonitor.so build/ApolloMonitor/ApolloMonitor.o -lboost_program_options -lboost_system -L/opt/BUTool/lib -Wl,-rpath=/opt/BUTool/lib -shared -fPIC -Wall -g -O3 -rdynamic -lBUTool_Helpers -lBUTool_ApolloSM -lToolException -lBUTool_IPBusIO 
+```
+
+
+```bash
 [root@apollo06 Grafana-Monitor]# make
 g++ -c -o build/shelf_monitor.o src/shelf_monitor.cxx -Iinclude -std=c++11 -fPIC -Wall -g -O3
 g++ -c -o build/base/SensorFactory.o src/base/SensorFactory.cc -Iinclude -std=c++11 -fPIC -Wall -g -O3
