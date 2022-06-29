@@ -128,10 +128,9 @@ ApolloMonitor::ApolloMonitor(std::vector<std::string> const & args){
   table= args[2];
 
   //Create and initialize ApolloSM
-  SM = new ApolloSM();
   std::vector<std::string> connArgs;
   connArgs.push_back(args[0]);
-  SM->Connect(connArgs);
+  SM = new ApolloSM(connArgs);
 
   //Build base name using apollo SN
   base = args[1];
